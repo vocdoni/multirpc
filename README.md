@@ -5,10 +5,13 @@ A JSON driven, signature ready, letsencrypt compatible modular RPC stack for mul
 This GoLang module provides a full stack for implementing a flexible RPC service.
 The same mux router could be used for providing service to multiple network transports in paralel.
 
-The aim for multirpc is to become a standard on RPC communications over any transport layer, using the same JSON structure and signature schema.
-The API consumer only needs to provide the last application layer (define the custom JSON fields and handlers).
+The aim for multirpc is to provide and easy way to implement an RPC communication over any transport layer, 
+using the same JSON structure and signature schema.
+The API consumer only needs to provide the application layer (define the custom JSON fields and handlers).
 
 The RPC provides security mechanisms for validating the origin and for authentication (using secp256k1 cryptography).
+
+The network encryption (if any) is handled on the transport layer.
 
 Current transports supported:
 + `HTTP` with go-chi
@@ -125,8 +128,8 @@ In order to enable TLS encryption with letsencrypt, the API must be configured a
     api := &types.API{
         ListenHost: "0.0.0.0",
         ListenPort: 443,
-        TLSdomain  "myValidDomain.com",
-        TLSdirCert "/tmp/tlsdir"
+        TLSdomain:  "myValidDomain.com",
+        TLSdirCert: "/tmp/tlsdir"
     }
 ```	
 
