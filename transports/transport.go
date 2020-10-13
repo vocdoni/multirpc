@@ -1,4 +1,4 @@
-package net
+package transports
 
 import (
 	"github.com/vocdoni/multirpc/types"

@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/vocdoni/multirpc/metrics"
-	"github.com/vocdoni/multirpc/net"
 	"github.com/vocdoni/multirpc/router"
+	"github.com/vocdoni/multirpc/transports"
+	"github.com/vocdoni/multirpc/transports/mhttp"
 	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -15,7 +16,7 @@ import (
 // EndPoint handles the Websocket connection
 type EndPoint struct {
 	Router       *router.Router
-	Proxy        *net.Proxy
+	Proxy        *mhttp.Proxy
 	MetricsAgent *metrics.Agent
 }
 
@@ -33,14 +34,14 @@ func NewHttpWsEndpoint(cfg *types.API, signer *ethereum.SignKeys, tf func() type
 	}
 
 	// Create a HTTP+Websocket transport and attach the proxy
-	ts := new(net.HttpWsHandler)
+	ts := new(mhttp.HttpWsHandler)
 	ts.Init(new(types.Connection))
 	ts.SetProxy(pxy)
 
 	// Create the channel for incoming messages and attach to transport
 	listenerOutput := make(chan types.Message)
 	go ts.Listen(listenerOutput)
-	transportMap := make(map[string]net.Transport)
+	transportMap := make(map[string]transports.Transport)
 	transportMap["httpws"] = ts
 
 	// Create a new router and attach the transports
@@ -56,8 +57,8 @@ func NewHttpWsEndpoint(cfg *types.API, signer *ethereum.SignKeys, tf func() type
 
 // proxy creates a new service for routing HTTP connections using go-chi server
 // if tlsDomain is specified, it will use letsencrypt to fetch a valid TLS certificate
-func proxy(host string, port int32, tlsDomain, tlsDir string) (*net.Proxy, error) {
-	pxy := net.NewProxy()
+func proxy(host string, port int32, tlsDomain, tlsDir string) (*mhttp.Proxy, error) {
+	pxy := mhttp.NewProxy()
 	pxy.Conn.TLSdomain = tlsDomain
 	pxy.Conn.TLScertDir = tlsDir
 	pxy.Conn.Address = host

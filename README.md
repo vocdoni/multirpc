@@ -20,7 +20,7 @@ Current transports supported:
 + `WSS` with "nhooyr.io/websocket" and letsencrypt
 + `libp2p` with libp2p and a custom pubsub protocol
 
-More could be easy added, see the `net` module.
+More could be easy added, see the `transports` module.
 
 All JSON requests follows the next schema which is automatically handled by this module.
 

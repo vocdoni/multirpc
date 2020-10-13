@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/vocdoni/multirpc/net"
+	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
@@ -22,7 +22,7 @@ type registeredMethod struct {
 
 // Router holds a router object
 type Router struct {
-	Transports  map[string]net.Transport
+	Transports  map[string]transports.Transport
 	messageType func() types.MessageAPI
 	methods     map[string]registeredMethod
 	inbound     <-chan types.Message
@@ -30,7 +30,8 @@ type Router struct {
 }
 
 // NewRouter creates a router multiplexer instance
-func NewRouter(inbound <-chan types.Message, transports map[string]net.Transport, signer *ethereum.SignKeys, messageTypeFunc func() types.MessageAPI) *Router {
+func NewRouter(inbound <-chan types.Message, transports map[string]transports.Transport,
+	signer *ethereum.SignKeys, messageTypeFunc func() types.MessageAPI) *Router {
 	r := new(Router)
 	r.methods = make(map[string]registeredMethod)
 	r.inbound = inbound
