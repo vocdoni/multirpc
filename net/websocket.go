@@ -31,8 +31,8 @@ func (c WebsocketContext) ConnectionType() string {
 	return "Websocket"
 }
 
-func (c *WebsocketContext) Send(msg types.Message) {
-	c.Conn.Write(context.TODO(), websocket.MessageBinary, msg.Data)
+func (c *WebsocketContext) Send(msg types.Message) error {
+	return c.Conn.Write(context.TODO(), websocket.MessageBinary, msg.Data)
 }
 
 // SetProxy sets the proxy for the ws
@@ -87,19 +87,23 @@ func (w *WebsocketHandle) Listen(receiver chan<- types.Message) {
 }
 
 // Listen will listen the websockets handler and write the received data into the channel
-func (w *WebsocketHandle) AddNamespace(namespace string) {
+func (w *WebsocketHandle) AddNamespace(namespace string) error {
+	if len(namespace) == 0 || namespace[0] != '/' {
+		return fmt.Errorf("namespace on ws must start with /")
+	}
 	w.AddProxyHandler(namespace)
+	return nil
 }
 
 // Send sends the response given a message
-func (w *WebsocketHandle) Send(msg types.Message) {
+func (w *WebsocketHandle) Send(msg types.Message) error {
 	// TODO(mvdan): this extra abstraction layer is probably useless
-	msg.Context.(*WebsocketContext).Send(msg)
+	return msg.Context.(*WebsocketContext).Send(msg)
 }
 
-func (w *WebsocketHandle) SendUnicast(address string, msg types.Message) {
+func (w *WebsocketHandle) SendUnicast(address string, msg types.Message) error {
 	// WebSocket is not p2p so sendUnicast makes the same of Send()
-	w.Send(msg)
+	return w.Send(msg)
 }
 
 func (w *WebsocketHandle) SetBootnodes(bootnodes []string) {

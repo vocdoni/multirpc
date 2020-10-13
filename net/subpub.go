@@ -8,7 +8,6 @@ import (
 	"github.com/vocdoni/multirpc/subpub"
 	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
-	"gitlab.com/vocdoni/go-dvote/log"
 )
 
 type SubPubHandle struct {
@@ -41,9 +40,12 @@ func (s *SubPubHandle) Listen(reciever chan<- types.Message) {
 	s.SubPub.Start(ctx)
 	go s.SubPub.Subscribe(ctx)
 	var msg types.Message
+	var msgctx subpub.MessageContext
 	for {
-		msg.Data = <-s.SubPub.Reader
+		msgctx = <-s.SubPub.Reader
+		msg.Data = msgctx.Message
 		msg.TimeStamp = int32(time.Now().Unix())
+		msg.Context = &msgctx
 		reciever <- msg
 	}
 }
@@ -68,16 +70,23 @@ func (s *SubPubHandle) ConnectionType() string {
 	return "SubPub"
 }
 
-func (s *SubPubHandle) Send(msg types.Message) {
-	s.SubPub.BroadcastWriter <- msg.Data
-}
-
-func (s *SubPubHandle) AddNamespace(namespace string) {
-	// TBD (could subscrive to a specific topic)
-}
-
-func (s *SubPubHandle) SendUnicast(address string, msg types.Message) {
-	if err := s.SubPub.PeerStreamWrite(address, msg.Data); err != nil {
-		log.Warnf("cannot send message to %s: (%s)", address, err)
+func (s *SubPubHandle) Send(msg types.Message) error {
+	if msg.Context != nil {
+		return msg.Context.Send(msg)
 	}
+	s.SubPub.BroadcastWriter <- msg.Data
+	return nil
+}
+
+func (s *SubPubHandle) AddNamespace(namespace string) error {
+	// TBD (could subscrive to a specific topic)
+	return nil
+}
+
+func (s *SubPubHandle) SendUnicast(address string, msg types.Message) error {
+	// TBD: check if send unicast is really needed, maybe with Send() and the MessageContext the same can be achieved
+	if err := s.SubPub.PeerStreamWrite(address, msg.Data); err != nil {
+		return fmt.Errorf("cannot send message to %s: (%s)", address, err)
+	}
+	return nil
 }

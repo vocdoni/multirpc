@@ -3,8 +3,24 @@ package subpub
 import (
 	"bufio"
 
+	"github.com/libp2p/go-libp2p-core/network"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
+
+type MessageContext struct {
+	Message []byte
+	Stream  network.Stream
+}
+
+func (mc *MessageContext) ConnectionType() string {
+	return "subpub"
+}
+
+func (mc *MessageContext) Send(m types.Message) error {
+	_, err := mc.Stream.Write(m.Data)
+	return err
+}
 
 // SendMessage encrypts and writes a message on the readwriter buffer
 func (ps *SubPub) SendMessage(w *bufio.Writer, msg []byte) error {

@@ -10,7 +10,7 @@ import (
 func (ps *SubPub) handleStream(stream network.Stream) {
 	// First, ensure that any messages read from the stream are sent to the
 	// SubPub.Reader channel.
-	go ps.readHandler(bufio.NewReader(stream))
+	go ps.readHandler(stream)
 
 	// Second, ensure that, from now on, any broadcast message is sent to
 	// this stream as well.
@@ -51,7 +51,9 @@ func (ps *SubPub) broadcastHandler(write <-chan []byte, w *bufio.Writer) {
 	}
 }
 
-func (ps *SubPub) readHandler(r *bufio.Reader) {
+func (ps *SubPub) readHandler(stream network.Stream) {
+	r := bufio.NewReader(stream)
+
 	for {
 		select {
 		case <-ps.close:
@@ -75,6 +77,6 @@ func (ps *SubPub) readHandler(r *bufio.Reader) {
 			}
 		}
 		log.Debugf("message received: %s", message)
-		go func() { ps.Reader <- message }()
+		go func() { ps.Reader <- MessageContext{Message: message, Stream: stream} }()
 	}
 }

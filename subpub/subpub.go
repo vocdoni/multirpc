@@ -34,7 +34,7 @@ type SubPub struct {
 	GroupKey        [32]byte
 	Topic           string
 	BroadcastWriter chan []byte
-	Reader          chan []byte
+	Reader          chan MessageContext
 	NoBootStrap     bool
 	BootNodes       []string
 	PubKey          string
@@ -78,7 +78,7 @@ func NewSubPub(key ecdsa.PrivateKey, groupKey []byte, port int32, private bool) 
 	ps.PubKey = hex.EncodeToString(eth.CompressPubkey(&key.PublicKey))
 	ps.privKey = hex.EncodeToString(key.D.Bytes())
 	ps.BroadcastWriter = make(chan []byte)
-	ps.Reader = make(chan []byte)
+	ps.Reader = make(chan MessageContext)
 	ps.Port = port
 	ps.Private = private
 	ps.DiscoveryPeriod = time.Second * 10

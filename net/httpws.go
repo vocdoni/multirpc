@@ -1,6 +1,8 @@
 package net
 
 import (
+	"fmt"
+
 	"github.com/vocdoni/multirpc/types"
 )
 
@@ -36,14 +38,14 @@ func (h *HttpWsHandler) Listen(receiver chan<- types.Message) {
 	}
 }
 
-func (h *HttpWsHandler) SendUnicast(address string, msg types.Message) {
+func (h *HttpWsHandler) SendUnicast(address string, msg types.Message) error {
 	// WebSocket is not p2p so sendUnicast makes the same of Send()
-	h.Send(msg)
+	return h.Send(msg)
 }
 
-func (h *HttpWsHandler) Send(msg types.Message) {
+func (h *HttpWsHandler) Send(msg types.Message) error {
 	// TODO(mvdan): this extra abstraction layer is probably useless
-	msg.Context.(*HttpContext).Send(msg)
+	return msg.Context.(*HttpContext).Send(msg)
 }
 
 func (h *HttpWsHandler) SetBootnodes(bootnodes []string) {
@@ -56,8 +58,12 @@ func (h *HttpWsHandler) AddPeer(peer string) error {
 }
 
 // AddNamespace adds a new namespace to the transport
-func (h *HttpWsHandler) AddNamespace(namespace string) {
+func (h *HttpWsHandler) AddNamespace(namespace string) error {
+	if len(namespace) == 0 || namespace[0] != '/' {
+		return fmt.Errorf("namespace on httpws must start with /")
+	}
 	h.AddProxyHandler(namespace)
+	return nil
 }
 
 func (h *HttpWsHandler) Address() string {

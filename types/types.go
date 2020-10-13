@@ -9,7 +9,7 @@ import (
 
 type MessageContext interface {
 	ConnectionType() string
-	Send(Message)
+	Send(Message) error
 }
 
 // Message is a wrapper for messages from various net transport modules
@@ -29,9 +29,8 @@ type Connection struct {
 	TransportKey string // transport layer key for encrypting messages
 	Key          string // this node's key
 	Address      string // this node's address
-	Path         string // specific path on which a transport should listen
-	TLSdomain    string // ssl domain
-	TLScertDir   string // ssl certificates directory
+	TLSdomain    string // tls domain
+	TLScertDir   string // tls certificates directory
 	Port         int32  // specific port on which a transport should listen
 }
 
