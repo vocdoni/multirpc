@@ -1,7 +1,7 @@
 package net
 
 import (
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/types"
 )
 
 // HttpWsHandler is a Mixed handler websockets/http

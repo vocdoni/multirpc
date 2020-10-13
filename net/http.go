@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 

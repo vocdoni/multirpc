@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"nhooyr.io/websocket"
 )

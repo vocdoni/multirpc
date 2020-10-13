@@ -21,10 +21,10 @@ curl -s 127.0.0.1:7788/main -X POST -d '{"request":{"method":"hello", "request":
 import (
 	"fmt"
 
-	"github.com/vocdoni/mtrouter/endpoint"
-	"github.com/vocdoni/mtrouter/example/message"
-	"github.com/vocdoni/mtrouter/router"
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/endpoint"
+	"github.com/vocdoni/multirpc/example/message"
+	"github.com/vocdoni/multirpc/router"
+	"github.com/vocdoni/multirpc/types"
 
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"

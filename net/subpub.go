@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vocdoni/mtrouter/subpub"
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/subpub"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
 )

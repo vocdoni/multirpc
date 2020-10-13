@@ -3,7 +3,7 @@ package net
 import (
 	"errors"
 
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/types"
 )
 
 type Transport interface {

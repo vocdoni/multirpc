@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/vocdoni/mtrouter/net"
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/net"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"

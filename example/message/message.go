@@ -1,6 +1,6 @@
 package message
 
-import "github.com/vocdoni/mtrouter/types"
+import "github.com/vocdoni/multirpc/types"
 
 // MyAPI is an example JSON API type compatible with types.MessageAPI
 type MyAPI struct {

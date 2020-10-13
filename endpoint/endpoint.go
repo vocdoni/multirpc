@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vocdoni/mtrouter/metrics"
-	"github.com/vocdoni/mtrouter/net"
-	"github.com/vocdoni/mtrouter/router"
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/metrics"
+	"github.com/vocdoni/multirpc/net"
+	"github.com/vocdoni/multirpc/router"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
 )

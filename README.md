@@ -1,8 +1,23 @@
-# MTrouter 
+# multirpc
 
-A JSON driven, signature authentication ready, letsencrypt compatible modular router stack for multiple transports.
+A JSON driven, signature ready, letsencrypt compatible modular RPC stack for multiple transports.
 
-Current transports supported: `HTTP`, `HTTPs` `WS`, `WSS` and `libp2p`.
+This GoLang module provides a full stack for implementing a flexible RPC service.
+The same mux router could be used for providing service to multiple network transports in paralel.
+
+The aim for multirpc is to become a standard on RPC communications over any transport layer, using the same JSON structure and signature schema.
+The API consumer only needs to provide the last application layer (define the custom JSON fields and handlers).
+
+The RPC provides security mechanisms for validating the origin and for authentication (using secp256k1 cryptography).
+
+Current transports supported:
++ `HTTP` with go-chi
++ `HTTPs` with go-chi and letsencrypt
++ `WS` with "nhooyr.io/websocket"
++ `WSS` with "nhooyr.io/websocket" and letsencrypt
++ `libp2p` with libp2p and a custom pubsub protocol
+
+More could be easy added, see the `net` module.
 
 All JSON requests follows the next schema which is automatically handled by this module.
 
@@ -11,6 +26,8 @@ All JSON requests follows the next schema which is automatically handled by this
   "request": {
     "request": "1234",
     "timestamp": 1602582404,
+
+    "customfields...":"..."
   },
   "id": "1234",
   "signature": "6e1f5705f41c767d6d3ba516..."
@@ -56,11 +73,11 @@ func NewAPI() types.MessageAPI {
 
 So `GetID()`, `SetID()`, `SetTimestamp()`, `SetError()`, `GetMethod()` must be implemented.
 
-Also a special standalone function that returns the type is required (`NewApi()`).
+Also a special standalone function that returns the custom type is required `NewApi()`.
 
 ### HTTP+WS
 
-To start the HTTP(s) +  Websocket stack, the `endpoint` package can be used, was follows.
+To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be used as follows.
 
 ```golang
 	// API configuration
@@ -105,12 +122,12 @@ To start the HTTP(s) +  Websocket stack, the `endpoint` package can be used, was
 In order to enable TLS encryption with letsencrypt, the API must be configured as follows:
 
 ```golang
-	api := &types.API{
-		ListenHost: "0.0.0.0",
+    api := &types.API{
+        ListenHost: "0.0.0.0",
         ListenPort: 443,
-    	TLSdomain  "myValidDomain.com",
-    	TLSdirCert "/tmp/tlsdir"
-	}
+        TLSdomain  "myValidDomain.com",
+        TLSdirCert "/tmp/tlsdir"
+    }
 ```	
 
 ### Example

@@ -1,4 +1,4 @@
-module github.com/vocdoni/mtrouter
+module github.com/vocdoni/multirpc
 
 go 1.15
 

@@ -13,7 +13,7 @@ import (
 
 	reuse "github.com/libp2p/go-reuseport"
 	"github.com/p4u/recws"
-	"github.com/vocdoni/mtrouter/types"
+	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme"

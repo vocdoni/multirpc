@@ -5,7 +5,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/vocdoni/mtrouter/net"
+	"github.com/vocdoni/multirpc/net"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
