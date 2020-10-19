@@ -136,6 +136,7 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 	r.Transports[ep.ID()].AddNamespace("/main")
 
 	// And handler for namespace main and method hello
+	// r.AddHandler("name", "namespace", handler, requiresSignature, requiresAuth)
 	if err := r.AddHandler("hello", "/main", hello, false, true); err != nil {
 		log.Fatal(err)
 	}
@@ -151,6 +152,36 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 
 	// Start routing
 	r.Route()
+```
+
+And write the handlers
+
+```golang
+func hello(rr types.RouterRequest) {
+	msg := &message.MyAPI{}
+	msg.ID = rr.Id
+	msg.Reply = fmt.Sprintf("hello! got your message with ID %s", rr.Id)
+	rr.Send(router.BuildReply(msg, rr))
+}
+
+func addKey(rr types.RouterRequest) {
+	msg := &message.MyAPI{}
+
+	if ok := rr.Signer.Authorized[rr.Address]; ok {
+		msg.Error = fmt.Sprintf("address %s already authorized", rr.Address.Hex())
+	} else {
+		rr.Signer.AddAuthKey(rr.Address)
+		log.Infof("adding pubKey %s", rr.SignaturePublicKey)
+		msg.Reply = fmt.Sprintf("added new authorized address %s", rr.Address.Hex())
+	}
+
+	rr.Send(router.BuildReply(msg, rr))
+}
+
+func getSecret(rr types.RouterRequest) {
+	msg := &message.MyAPI{Reply: "the secret is foobar123456"}
+	rr.Send(router.BuildReply(msg, rr))
+}
 ```
 
 **with TLS**
