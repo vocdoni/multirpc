@@ -14,7 +14,7 @@ import (
 
 	"nhooyr.io/websocket"
 
-	"github.com/vocdoni/multirpc/example/message"
+	"github.com/vocdoni/multirpc/example/httpws/message"
 	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"

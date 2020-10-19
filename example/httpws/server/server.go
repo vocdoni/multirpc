@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/vocdoni/multirpc/endpoint"
-	"github.com/vocdoni/multirpc/example/message"
+	"github.com/vocdoni/multirpc/example/httpws/message"
 	"github.com/vocdoni/multirpc/router"
 	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/types"

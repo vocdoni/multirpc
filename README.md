@@ -11,7 +11,23 @@ The API consumer only needs to provide the application layer (define the custom 
 
 The RPC provides security mechanisms for validating the origin and for authentication (using secp256k1 cryptography).
 
-The network encryption (if any) is handled on the transport layer.
+The network encryption (if any) must be handled on the transport layer.
+
+## Endpoints, transports and router
+
+The multirpc stack is integrated by three components:
+- endpoints are ready-to-use RPC endpoints
+- transports are the lower layer handling the networking and encryption
+- router is the component multiplexing all the connections
+
+An endpoint is attached to a specific transport and the API consumer only needs to write Handlers that interacts with the Router.
+
+```
+                             [ROUTER] <--> [Custom Handlers]
+[endpoint1] -> [transport1]---/ / / 
+[endpoint2] -> [transport2]----/ /
+[endpoint3] -> [transport1]-----/ 
+```
 
 Current transports supported:
 + `HTTP` with go-chi
@@ -21,6 +37,8 @@ Current transports supported:
 + `libp2p` with libp2p and a custom pubsub protocol
 
 More could be easy added, see the `transports` module.
+
+## JSON structure
 
 All JSON requests follows the next schema which is automatically handled by this module.
 
@@ -78,7 +96,11 @@ So `GetID()`, `SetID()`, `SetTimestamp()`, `SetError()`, `GetMethod()` must be i
 
 Also a special standalone function that returns the custom type is required `NewApi()`.
 
-### HTTP+WS
+## Endpoint
+
+Bellow the list of endpoints currently implemented.
+
+### HTTP+WS endpoint
 
 To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be used as follows.
 
@@ -131,7 +153,7 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 	r.Route()
 ```
 
-### HTTP+WS with TLS
+**with TLS**
 
 In order to enable TLS encryption with letsencrypt, the HTTPWs endpoint must be configured as follows:
 
@@ -140,14 +162,14 @@ In order to enable TLS encryption with letsencrypt, the HTTPWs endpoint must be 
 	ep.SetOption("tlsDomain", "myValidDomain.com")
 ```	
 
-### Example
+#### Example
 
 Find the full example on the `example` directory of this repository.
 
 Start the server
 
 ```js
-$ go run example/server/server.go 
+$ go run example/httpws/server/server.go 
 2020-10-13T14:42:54+02:00       INFO    server/server.go:34     logger construction succeeded at level debug and output stdout
 2020-10-13T14:42:54+02:00       INFO    endpoint/endpoint.go:27 creating API service
 2020-10-13T14:42:54+02:00       INFO    endpoint/endpoint.go:65 creating proxy service, listening on 0.0.0.0:7788
@@ -169,18 +191,18 @@ $ curl -s 127.0.0.1:7788/main -X POST -d '{"request":{"method":"hello", "request
 But in order to use the signature mechanism, a more advanced client tool must be used. In this case we provide a `client.go` example code.
 
 ```js
-$ echo '{"method":"getsecret"}' | go run example/client/client.go -key=4f81e884843a5910af16dd85424bdd6a4bb524159abeee798ed557cd6418eb17
+$ echo '{"method":"getsecret"}' | go run example/httpws/client/client.go -key=4f81e884843a5910af16dd85424bdd6a4bb524159abeee798ed557cd6418eb17
 {"error":"invalid authentication","request":"539","timestamp":1602593846}
 ```
 
 ```js
- $ echo '{"method":"addkey"}' | go run example/client/client.go -key=4f81e884843a5910af16dd85424bdd6a4bb524159abeee798ed557cd6418eb17
+ $ echo '{"method":"addkey"}' | go run example/httpws/client/client.go -key=4f81e884843a5910af16dd85424bdd6a4bb524159abeee798ed557cd6418eb17
 
 {"reply":"added new authorized address 0xD7B5E12Fbe91Efd61E06B35A7bc06028cbe0209E","request":"28","timestamp":1602593157}
 ```
 
 ```js
-$ echo '{"method":"getsecret"}' | go run example/client/client.go -key=4f81e884843a5910af16dd85424bdd6a4bb524159abeee798ed557cd6418eb17
+$ echo '{"method":"getsecret"}' | go run example/httpws/client/client.go -key=4f81e884843a5910af16dd85424bdd6a4bb524159abeee798ed557cd6418eb17
 
 {"reply":"the secret is foobar123456","request":"691","timestamp":1602593187}
 ```
