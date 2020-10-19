@@ -35,7 +35,7 @@ func main() {
 	log.Init("debug", "stdout")
 
 	// API configuration
-	api := &types.API{
+	api := &types.HTTPapi{
 		ListenHost: "0.0.0.0",
 		ListenPort: 7788,
 	}
@@ -46,15 +46,22 @@ func main() {
 	// Create the channel for incoming messages and attach to transport
 	listener := make(chan types.Message)
 
-	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint helper
-	ep, err := endpoint.NewHttpWsEndpoint(api, sig, listener)
+	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint interface
+	ep := endpoint.HTTPWSEndPoint{}
+
+	// Configures the endpoint
+	ep.SetOption("listenHost", api.ListenHost)
+	ep.SetOption("listenPort", api.ListenPort)
+	ep.SetOption("tlsDomain", api.TLSdomain)
+
+	err := ep.Init(listener)
 	if err != nil {
 		panic(err)
 	}
 
 	// Create the transports map, this allows adding several transports on the same router
 	transportMap := make(map[string]transports.Transport)
-	transportMap[ep.ID()] = ep.Transport
+	transportMap[ep.ID()] = ep.Transport()
 
 	// Create a new router and attach the transports
 	r := router.NewRouter(listener, transportMap, sig, message.NewAPI)

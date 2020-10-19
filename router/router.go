@@ -69,8 +69,7 @@ func (r *Router) Route() {
 			go r.SendError(request, "invalid authentication")
 			continue
 		}
-		log.Infof("api method %s/%s", msg.Namespace, request.Method)
-		log.Debugf("received: %s\n\t%+v", msg.Data, request)
+		log.Infof("calling api method %s/%s", msg.Namespace, request.Method)
 		go method.handler(request)
 	}
 }

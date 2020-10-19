@@ -1,68 +1,11 @@
 package endpoint
 
-import (
-	"fmt"
-	"time"
+import "github.com/vocdoni/multirpc/transports"
 
-	"github.com/vocdoni/multirpc/metrics"
-	"github.com/vocdoni/multirpc/transports"
-	"github.com/vocdoni/multirpc/transports/mhttp"
-	"github.com/vocdoni/multirpc/types"
-	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
-	"gitlab.com/vocdoni/go-dvote/log"
-)
-
-// EndPoint handles the Websocket connection
-type EndPoint struct {
-	Proxy        *mhttp.Proxy
-	MetricsAgent *metrics.Agent
-	Transport    transports.Transport
-	id           string
-}
-
-// ID returns the name of the transport implemented on the endpoint
-func (e *EndPoint) ID() string {
-	return e.id
-}
-
-// NewHttpWsEndpoint creates a new websockets/http mixed endpoint
-func NewHttpWsEndpoint(cfg *types.API, signer *ethereum.SignKeys, listener chan types.Message) (*EndPoint, error) {
-	if cfg == nil {
-		return nil, fmt.Errorf("cannot create endpoint, configuration is nil")
-	}
-	log.Infof("creating API service")
-
-	// Create a HTTP Proxy service
-	pxy, err := proxy(cfg.ListenHost, cfg.ListenPort, cfg.TLSdomain, cfg.TLSdirCert)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a HTTP+Websocket transport and attach the proxy
-	ts := new(mhttp.HttpWsHandler)
-	ts.Init(new(types.Connection))
-	ts.SetProxy(pxy)
-	go ts.Listen(listener)
-
-	// Attach the metrics agent (Prometheus)
-	var ma *metrics.Agent
-	if cfg.Metrics != nil && cfg.Metrics.Enabled {
-		ma = metrics.NewAgent("/metrics", time.Second*time.Duration(cfg.Metrics.RefreshInterval), pxy)
-	}
-	return &EndPoint{id: "httpws", Proxy: pxy, MetricsAgent: ma, Transport: ts}, nil
-}
-
-// proxy creates a new service for routing HTTP connections using go-chi server
-// if tlsDomain is specified, it will use letsencrypt to fetch a valid TLS certificate
-func proxy(host string, port int32, tlsDomain, tlsDir string) (*mhttp.Proxy, error) {
-	pxy := mhttp.NewProxy()
-	pxy.Conn.TLSdomain = tlsDomain
-	pxy.Conn.TLScertDir = tlsDir
-	pxy.Conn.Address = host
-	pxy.Conn.Port = port
-	log.Infof("creating proxy service, listening on %s:%d", host, port)
-	if pxy.Conn.TLSdomain != "" {
-		log.Infof("configuring proxy with TLS domain %s", tlsDomain)
-	}
-	return pxy, pxy.Init()
+// Endpoint represents a valid Endpoint for the multirpc stack
+type Endpoint interface {
+	Init(config map[string]string) error
+	SetOption(name string, value interface{}) error
+	Transport() transports.Transport
+	ID() string
 }

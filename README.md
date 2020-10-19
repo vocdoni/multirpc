@@ -83,27 +83,29 @@ Also a special standalone function that returns the custom type is required `New
 To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be used as follows.
 
 ```golang
-	// API configuration
-	api := &types.API{
-		ListenHost: "0.0.0.0",
-		ListenPort: 7788,
-	}
-	// Generate signing keys
-	sig := ethereum.NewSignKeys()
-	sig.Generate()
-
 	// Create the channel for incoming messages and attach to transport
 	listener := make(chan types.Message)
 
-	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint helper
-	ep, err := endpoint.NewHttpWsEndpoint(api, sig, listener)
+	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint interface
+	ep := endpoint.HTTPWSEndPoint{}
+
+	// Configures the endpoint
+	ep.SetOption("listenHost", "0.0.0.0")
+	ep.SetOption("listenPort", int32(7788))
+	ep.SetOption("tlsDomain", "")
+
+	err := ep.Init(listener)
 	if err != nil {
 		panic(err)
 	}
 
 	// Create the transports map, this allows adding several transports on the same router
 	transportMap := make(map[string]transports.Transport)
-	transportMap[ep.ID()] = ep.Transport
+	transportMap[ep.ID()] = ep.Transport()
+
+	// Generate signing keys
+	sig := ethereum.NewSignKeys()
+	sig.Generate()
 
 	// Create a new router and attach the transports
 	r := router.NewRouter(listener, transportMap, sig, message.NewAPI)
@@ -131,15 +133,11 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 
 ### HTTP+WS with TLS
 
-In order to enable TLS encryption with letsencrypt, the API must be configured as follows:
+In order to enable TLS encryption with letsencrypt, the HTTPWs endpoint must be configured as follows:
 
 ```golang
-    api := &types.API{
-        ListenHost: "0.0.0.0",
-        ListenPort: 443,
-        TLSdomain:  "myValidDomain.com",
-        TLSdirCert: "/tmp/tlsdir"
-    }
+	ep.SetOption("listenPort", int32(443))
+	ep.SetOption("tlsDomain", "myValidDomain.com")
 ```	
 
 ### Example

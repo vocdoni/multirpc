@@ -61,7 +61,7 @@ type RequestMessage struct {
 	Signature string `json:"signature"`
 }
 
-type API struct {
+type HTTPapi struct {
 	ListenHost string
 	ListenPort int32
 	TLSdomain  string
