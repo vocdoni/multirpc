@@ -92,32 +92,41 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 	sig := ethereum.NewSignKeys()
 	sig.Generate()
 
-	// Create HTTPWS endpoint
-	ep, err := endpoint.NewHttpWsEndpoint(api, sig, message.NewAPI)
+	// Create the channel for incoming messages and attach to transport
+	listener := make(chan types.Message)
+
+	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint helper
+	ep, err := endpoint.NewHttpWsEndpoint(api, sig, listener)
 	if err != nil {
 		panic(err)
 	}
 
+	// Create the transports map, this allows adding several transports on the same router
+	transportMap := make(map[string]transports.Transport)
+	transportMap[ep.ID()] = ep.Transport
+
+	// Create a new router and attach the transports
+	r := router.NewRouter(listener, transportMap, sig, message.NewAPI)
+
 	// Add namespace /main to the transport httpws
-	ep.Router.Transports["httpws"].AddNamespace("/main")
+	r.Transports[ep.ID()].AddNamespace("/main")
 
 	// And handler for namespace main and method hello
-	if err := ep.Router.AddHandler("hello", "/main", hello, false, true); err != nil {
+	if err := r.AddHandler("hello", "/main", hello, false, true); err != nil {
 		log.Fatal(err)
-    }
+	}
 
-    // Add another not private method for adding new auth keys
-	if err := ep.Router.AddHandler("addkey", "/main", addKey, false, false); err != nil {
+	if err := r.AddHandler("addkey", "/main", addKey, false, false); err != nil {
 		log.Fatal(err)
 	}
 
 	// Add a private method
-	if err := ep.Router.AddHandler("getsecret", "/main", getSecret, true, false); err != nil {
+	if err := r.AddHandler("getsecret", "/main", getSecret, true, false); err != nil {
 		log.Fatal(err)
 	}
 
 	// Start routing
-	ep.Router.Route()
+	r.Route()
 ```
 
 ### HTTP+WS with TLS

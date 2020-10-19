@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/vocdoni/multirpc/metrics"
-	"github.com/vocdoni/multirpc/router"
 	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/transports/mhttp"
 	"github.com/vocdoni/multirpc/types"
@@ -15,13 +14,19 @@ import (
 
 // EndPoint handles the Websocket connection
 type EndPoint struct {
-	Router       *router.Router
 	Proxy        *mhttp.Proxy
 	MetricsAgent *metrics.Agent
+	Transport    transports.Transport
+	id           string
+}
+
+// ID returns the name of the transport implemented on the endpoint
+func (e *EndPoint) ID() string {
+	return e.id
 }
 
 // NewHttpWsEndpoint creates a new websockets/http mixed endpoint
-func NewHttpWsEndpoint(cfg *types.API, signer *ethereum.SignKeys, tf func() types.MessageAPI) (*EndPoint, error) {
+func NewHttpWsEndpoint(cfg *types.API, signer *ethereum.SignKeys, listener chan types.Message) (*EndPoint, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("cannot create endpoint, configuration is nil")
 	}
@@ -37,22 +42,14 @@ func NewHttpWsEndpoint(cfg *types.API, signer *ethereum.SignKeys, tf func() type
 	ts := new(mhttp.HttpWsHandler)
 	ts.Init(new(types.Connection))
 	ts.SetProxy(pxy)
-
-	// Create the channel for incoming messages and attach to transport
-	listenerOutput := make(chan types.Message)
-	go ts.Listen(listenerOutput)
-	transportMap := make(map[string]transports.Transport)
-	transportMap["httpws"] = ts
-
-	// Create a new router and attach the transports
-	r := router.NewRouter(listenerOutput, transportMap, signer, tf)
+	go ts.Listen(listener)
 
 	// Attach the metrics agent (Prometheus)
 	var ma *metrics.Agent
 	if cfg.Metrics != nil && cfg.Metrics.Enabled {
 		ma = metrics.NewAgent("/metrics", time.Second*time.Duration(cfg.Metrics.RefreshInterval), pxy)
 	}
-	return &EndPoint{Router: r, Proxy: pxy, MetricsAgent: ma}, nil
+	return &EndPoint{id: "httpws", Proxy: pxy, MetricsAgent: ma, Transport: ts}, nil
 }
 
 // proxy creates a new service for routing HTTP connections using go-chi server
