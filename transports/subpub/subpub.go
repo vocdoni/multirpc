@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/vocdoni/multirpc/subpub"
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/transports"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 )
 
 type SubPubHandle struct {
-	Conn      *types.Connection
+	Conn      *transports.Connection
 	SubPub    *subpub.SubPub
 	BootNodes []string
 }
 
-func (p *SubPubHandle) Init(c *types.Connection) error {
+func (p *SubPubHandle) Init(c *transports.Connection) error {
 	p.Conn = c
 	s := ethereum.NewSignKeys()
 	if err := s.AddHexKey(p.Conn.Key); err != nil {
@@ -35,11 +35,11 @@ func (p *SubPubHandle) Init(c *types.Connection) error {
 	return nil
 }
 
-func (s *SubPubHandle) Listen(reciever chan<- types.Message) {
+func (s *SubPubHandle) Listen(reciever chan<- transports.Message) {
 	ctx := context.TODO()
 	s.SubPub.Start(ctx)
 	go s.SubPub.Subscribe(ctx)
-	var msg types.Message
+	var msg transports.Message
 	var msgctx subpub.MessageContext
 	for {
 		msgctx = <-s.SubPub.Reader
@@ -70,7 +70,7 @@ func (s *SubPubHandle) ConnectionType() string {
 	return "SubPub"
 }
 
-func (s *SubPubHandle) Send(msg types.Message) error {
+func (s *SubPubHandle) Send(msg transports.Message) error {
 	if msg.Context != nil {
 		return msg.Context.Send(msg)
 	}
@@ -83,7 +83,7 @@ func (s *SubPubHandle) AddNamespace(namespace string) error {
 	return nil
 }
 
-func (s *SubPubHandle) SendUnicast(address string, msg types.Message) error {
+func (s *SubPubHandle) SendUnicast(address string, msg transports.Message) error {
 	// TBD: check if send unicast is really needed, maybe with Send() and the MessageContext the same can be achieved
 	if err := s.SubPub.PeerStreamWrite(address, msg.Data); err != nil {
 		return fmt.Errorf("cannot send message to %s: (%s)", address, err)

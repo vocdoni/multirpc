@@ -3,18 +3,18 @@ package mhttp
 import (
 	"fmt"
 
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/transports"
 )
 
 // HttpWsHandler is a Mixed handler websockets/http
 type HttpWsHandler struct {
-	Proxy            *Proxy            // proxy where the ws will be associated
-	Connection       *types.Connection // the ws connection
-	internalReceiver chan types.Message
+	Proxy            *Proxy                 // proxy where the ws will be associated
+	Connection       *transports.Connection // the ws connection
+	internalReceiver chan transports.Message
 }
 
-func (h *HttpWsHandler) Init(c *types.Connection) error {
-	h.internalReceiver = make(chan types.Message, 1)
+func (h *HttpWsHandler) Init(c *transports.Connection) error {
+	h.internalReceiver = make(chan transports.Message, 1)
 	return nil
 }
 
@@ -31,19 +31,19 @@ func (h *HttpWsHandler) ConnectionType() string {
 	return "HTTPWS"
 }
 
-func (h *HttpWsHandler) Listen(receiver chan<- types.Message) {
+func (h *HttpWsHandler) Listen(receiver chan<- transports.Message) {
 	for {
 		msg := <-h.internalReceiver
 		receiver <- msg
 	}
 }
 
-func (h *HttpWsHandler) SendUnicast(address string, msg types.Message) error {
+func (h *HttpWsHandler) SendUnicast(address string, msg transports.Message) error {
 	// WebSocket is not p2p so sendUnicast makes the same of Send()
 	return h.Send(msg)
 }
 
-func (h *HttpWsHandler) Send(msg types.Message) error {
+func (h *HttpWsHandler) Send(msg transports.Message) error {
 	// TODO(mvdan): this extra abstraction layer is probably useless
 	return msg.Context.(*HttpContext).Send(msg)
 }

@@ -7,31 +7,50 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/vocdoni/multirpc/transports"
-	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/crypto"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
+type RouterRequest struct {
+	transports.MessageContext
+	Message            transports.MessageAPI
+	Method             string
+	Id                 string
+	Authenticated      bool
+	Address            ethcommon.Address
+	SignaturePublicKey string
+	Private            bool
+	Signer             *ethereum.SignKeys
+}
+
+type RequestMessage struct {
+	MessageAPI json.RawMessage `json:"request"`
+
+	ID        string `json:"id"`
+	Signature string `json:"signature"`
+}
+
 type registeredMethod struct {
 	public        bool
 	skipSignature bool
-	handler       func(types.RouterRequest)
+	handler       func(RouterRequest)
 }
 
 // Router holds a router object
 type Router struct {
 	Transports  map[string]transports.Transport
-	messageType func() types.MessageAPI
+	messageType func() transports.MessageAPI
 	methods     map[string]registeredMethod
-	inbound     <-chan types.Message
+	inbound     <-chan transports.Message
 	signer      *ethereum.SignKeys
 }
 
 // NewRouter creates a router multiplexer instance
-func NewRouter(inbound <-chan types.Message, transports map[string]transports.Transport,
-	signer *ethereum.SignKeys, messageTypeFunc func() types.MessageAPI) *Router {
+func NewRouter(inbound <-chan transports.Message, transports map[string]transports.Transport,
+	signer *ethereum.SignKeys, messageTypeFunc func() transports.MessageAPI) *Router {
 	r := new(Router)
 	r.methods = make(map[string]registeredMethod)
 	r.inbound = inbound
@@ -42,7 +61,7 @@ func NewRouter(inbound <-chan types.Message, transports map[string]transports.Tr
 }
 
 // AddHandler adds a new function handler for serving a specific method identified by name.
-func (r *Router) AddHandler(method, namespace string, handler func(types.RouterRequest), private, skipSignature bool) error {
+func (r *Router) AddHandler(method, namespace string, handler func(RouterRequest), private, skipSignature bool) error {
 	log.Debugf("adding new handler %s for namespace %s", method, namespace)
 	if private {
 		return r.registerPrivate(namespace, method, handler)
@@ -74,11 +93,11 @@ func (r *Router) Route() {
 	}
 }
 
-func (r *Router) getRequest(namespace string, payload []byte, context types.MessageContext) (request types.RouterRequest, err error) {
+func (r *Router) getRequest(namespace string, payload []byte, context transports.MessageContext) (request RouterRequest, err error) {
 	// First unmarshal the outer layer, to obtain the request ID, the signed
 	// request, and the signature.
 	log.Debugf("got request: %s", payload)
-	reqOuter := &types.RequestMessage{}
+	reqOuter := &RequestMessage{}
 	if err := json.Unmarshal(payload, &reqOuter); err != nil {
 		return request, err
 	}
@@ -140,7 +159,7 @@ func (r *Router) getRequest(namespace string, payload []byte, context types.Mess
 	return request, err
 }
 
-func (r *Router) registerPrivate(namespace, method string, handler func(types.RouterRequest)) error {
+func (r *Router) registerPrivate(namespace, method string, handler func(RouterRequest)) error {
 	if _, ok := r.methods[namespace+method]; ok {
 		return fmt.Errorf("duplicate method %s for namespace %s", method, namespace)
 	}
@@ -148,7 +167,7 @@ func (r *Router) registerPrivate(namespace, method string, handler func(types.Ro
 	return nil
 }
 
-func (r *Router) registerPublic(namespace, method string, handler func(types.RouterRequest), skipSignature bool) error {
+func (r *Router) registerPublic(namespace, method string, handler func(RouterRequest), skipSignature bool) error {
 	if _, ok := r.methods[namespace+method]; ok {
 		return fmt.Errorf("duplicate method %s for namespace %s", method, namespace)
 	}
@@ -157,13 +176,13 @@ func (r *Router) registerPublic(namespace, method string, handler func(types.Rou
 }
 
 // SendError formats and sends an error message
-func (r *Router) SendError(request types.RouterRequest, errMsg string) {
+func (r *Router) SendError(request RouterRequest, errMsg string) {
 	var err error
 	log.Warn(errMsg)
 
 	// Add any last fields to the inner response, and marshal it with sorted
 	// fields for signing.
-	response := &types.RequestMessage{ID: request.Id}
+	response := &RequestMessage{ID: request.Id}
 	response.ID = request.Id
 
 	message := r.messageType()
@@ -189,7 +208,7 @@ func (r *Router) SendError(request types.RouterRequest, errMsg string) {
 		if err != nil {
 			log.Warnf("error marshaling response body: %s", err)
 		}
-		msg := types.Message{
+		msg := transports.Message{
 			TimeStamp: int32(time.Now().Unix()),
 			Context:   request.MessageContext,
 			Data:      data,
@@ -209,9 +228,9 @@ func (r *Router) DelAuthKey(addr common.Address) {
 }
 
 // BuildReply builds a response message (set ID, Timestamp and Signature)
-func BuildReply(response types.MessageAPI, request types.RouterRequest) types.Message {
+func BuildReply(response transports.MessageAPI, request RouterRequest) transports.Message {
 	var err error
-	respRequest := &types.RequestMessage{ID: request.Id}
+	respRequest := &RequestMessage{ID: request.Id}
 
 	response.SetID(request.Id)
 	response.SetTimestamp(int32(time.Now().Unix()))
@@ -220,7 +239,7 @@ func BuildReply(response types.MessageAPI, request types.RouterRequest) types.Me
 		// This should never happen. If it does, return a very simple
 		// plaintext error, and log the error.
 		log.Error(err)
-		return types.Message{
+		return transports.Message{
 			TimeStamp: int32(time.Now().Unix()),
 			Context:   request.MessageContext,
 			Data:      []byte(err.Error()),
@@ -240,14 +259,14 @@ func BuildReply(response types.MessageAPI, request types.RouterRequest) types.Me
 		// This should never happen. If it does, return a very simple
 		// plaintext error, and log the error.
 		log.Error(err)
-		return types.Message{
+		return transports.Message{
 			TimeStamp: int32(time.Now().Unix()),
 			Context:   request.MessageContext,
 			Data:      []byte(err.Error()),
 		}
 	}
 	log.Debugf("response: %s", respData)
-	return types.Message{
+	return transports.Message{
 		TimeStamp: int32(time.Now().Unix()),
 		Context:   request.MessageContext,
 		Data:      respData,

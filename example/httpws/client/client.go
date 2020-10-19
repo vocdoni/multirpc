@@ -15,7 +15,7 @@ import (
 	"nhooyr.io/websocket"
 
 	"github.com/vocdoni/multirpc/example/httpws/message"
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/router"
 	"gitlab.com/vocdoni/go-dvote/crypto"
 	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
 	"gitlab.com/vocdoni/go-dvote/log"
@@ -39,7 +39,7 @@ func NewAPIConnection(addr string) *APIConnection {
 }
 
 // Request makes a request to the previously connected endpoint
-func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *types.RequestMessage {
+func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *router.RequestMessage {
 
 	// Prepare and send request
 	req.Timestamp = (int32(time.Now().Unix()))
@@ -56,7 +56,7 @@ func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *
 		}
 	}
 
-	reqOuter := types.RequestMessage{
+	reqOuter := router.RequestMessage{
 		ID:         req.ID,
 		Signature:  signature,
 		MessageAPI: reqInner,
@@ -77,7 +77,7 @@ func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *
 		log.Fatalf("%s: %v", req.Method, err)
 	}
 
-	var respOuter types.RequestMessage
+	var respOuter router.RequestMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		log.Fatalf("%v", err)
 	}

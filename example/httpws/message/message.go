@@ -1,8 +1,8 @@
 package message
 
-import "github.com/vocdoni/multirpc/types"
+import "github.com/vocdoni/multirpc/transports"
 
-// MyAPI is an example JSON API type compatible with types.MessageAPI
+// MyAPI is an example JSON API type compatible with transports.MessageAPI
 type MyAPI struct {
 	ID        string   `json:"request"`
 	Method    string   `json:"method,omitempty"`
@@ -37,8 +37,8 @@ func (ma *MyAPI) GetMethod() string {
 	return ma.Method
 }
 
-// newAPI is a required function for returning the implemented interface types.MessageAPI
+// newAPI is a required function for returning the implemented interface transports.MessageAPI
 // This function is used by the router in order to fetch the specific type defined here.
-func NewAPI() types.MessageAPI {
+func NewAPI() transports.MessageAPI {
 	return &MyAPI{}
 }

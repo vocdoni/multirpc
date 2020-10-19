@@ -13,7 +13,7 @@ import (
 
 	reuse "github.com/libp2p/go-reuseport"
 	"github.com/p4u/recws"
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/transports"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme"
@@ -33,7 +33,7 @@ type ProxyWsHandler func(c *websocket.Conn)
 
 // Proxy represents a proxy
 type Proxy struct {
-	Conn   *types.Connection
+	Conn   *transports.Connection
 	Server *chi.Mux
 	Addr   net.Addr
 }
@@ -41,7 +41,7 @@ type Proxy struct {
 // NewProxy creates a new proxy instance
 func NewProxy() *Proxy {
 	p := new(Proxy)
-	p.Conn = new(types.Connection)
+	p.Conn = new(transports.Connection)
 	return p
 }
 

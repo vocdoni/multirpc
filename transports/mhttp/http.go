@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/transports"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
 type HttpHandler struct {
 	Proxy            *Proxy // proxy where the ws will be associated
-	internalReceiver chan types.Message
+	internalReceiver chan transports.Message
 }
 
 type HttpContext struct {
@@ -22,8 +22,8 @@ type HttpContext struct {
 	sent chan struct{}
 }
 
-func (h *HttpHandler) Init(c *types.Connection) error {
-	h.internalReceiver = make(chan types.Message, 1)
+func (h *HttpHandler) Init(c *transports.Connection) error {
+	h.internalReceiver = make(chan transports.Message, 1)
 	return nil
 }
 
@@ -31,7 +31,7 @@ func (h *HttpHandler) SetProxy(p *Proxy) {
 	h.Proxy = p
 }
 
-func getHTTPhandler(path string, receiver chan types.Message) func(w http.ResponseWriter, r *http.Request) {
+func getHTTPhandler(path string, receiver chan transports.Message) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		respBody, err := ioutil.ReadAll(r.Body)
@@ -40,7 +40,7 @@ func getHTTPhandler(path string, receiver chan types.Message) func(w http.Respon
 			return
 		}
 		hc := &HttpContext{Request: r, Writer: w, sent: make(chan struct{})}
-		msg := types.Message{
+		msg := transports.Message{
 			Data:      respBody,
 			TimeStamp: int32(time.Now().Unix()),
 			Context:   hc,
@@ -68,7 +68,7 @@ func (h *HttpContext) ConnectionType() string {
 	return "HTTP"
 }
 
-func (h *HttpContext) Send(msg types.Message) error {
+func (h *HttpContext) Send(msg transports.Message) error {
 	defer close(h.sent)
 
 	h.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(msg.Data)+1))
@@ -85,19 +85,19 @@ func (h *HttpHandler) ConnectionType() string {
 	return "HTTP"
 }
 
-func (h *HttpHandler) Listen(receiver chan<- types.Message) {
+func (h *HttpHandler) Listen(receiver chan<- transports.Message) {
 	for {
 		msg := <-h.internalReceiver
 		receiver <- msg
 	}
 }
 
-func (h *HttpHandler) SendUnicast(address string, msg types.Message) error {
+func (h *HttpHandler) SendUnicast(address string, msg transports.Message) error {
 	// WebSocket is not p2p so sendUnicast makes the same of Send()
 	return h.Send(msg)
 }
 
-func (h *HttpHandler) Send(msg types.Message) error {
+func (h *HttpHandler) Send(msg transports.Message) error {
 	// TODO(mvdan): this extra abstraction layer is probably useless
 	return msg.Context.(*HttpContext).Send(msg)
 }

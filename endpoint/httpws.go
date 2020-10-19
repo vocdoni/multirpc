@@ -7,9 +7,16 @@ import (
 	"github.com/vocdoni/multirpc/metrics"
 	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/transports/mhttp"
-	"github.com/vocdoni/multirpc/types"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
+
+type HTTPapi struct {
+	ListenHost string
+	ListenPort int32
+	TLSdomain  string
+	TLSdirCert string
+	Metrics    *metrics.Metrics
+}
 
 // EndPoint handles the Websocket connection
 type HTTPWSEndPoint struct {
@@ -17,7 +24,7 @@ type HTTPWSEndPoint struct {
 	MetricsAgent *metrics.Agent
 	transport    transports.Transport
 	id           string
-	config       types.HTTPapi
+	config       HTTPapi
 }
 
 // ID returns the name of the transport implemented on the endpoint
@@ -59,7 +66,7 @@ func (e *HTTPWSEndPoint) SetOption(name string, value interface{}) error {
 			return fmt.Errorf("metricsInterval must be a valid int")
 		}
 		if e.config.Metrics == nil {
-			e.config.Metrics = &types.Metrics{}
+			e.config.Metrics = &metrics.Metrics{}
 		}
 		e.config.Metrics.Enabled = true
 		e.config.Metrics.RefreshInterval = value.(int)
@@ -68,7 +75,7 @@ func (e *HTTPWSEndPoint) SetOption(name string, value interface{}) error {
 }
 
 // Init creates a new websockets/http mixed endpoint
-func (e *HTTPWSEndPoint) Init(listener chan types.Message) error {
+func (e *HTTPWSEndPoint) Init(listener chan transports.Message) error {
 	log.Infof("creating API service")
 
 	// Create a HTTP Proxy service
@@ -79,7 +86,7 @@ func (e *HTTPWSEndPoint) Init(listener chan types.Message) error {
 
 	// Create a HTTP+Websocket transport and attach the proxy
 	ts := new(mhttp.HttpWsHandler)
-	ts.Init(new(types.Connection))
+	ts.Init(new(transports.Connection))
 	ts.SetProxy(pxy)
 	go ts.Listen(listener)
 

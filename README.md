@@ -55,7 +55,7 @@ All JSON requests follows the next schema which is automatically handled by this
 }
 ```
 
-The module consumer only needs to provide a compatible (`types.MessageAPI`) struct, as the following example:
+The module consumer only needs to provide a compatible (`transports.MessageAPI`) struct, as the following example:
 
 ```golang
 type MyAPI struct {
@@ -87,7 +87,7 @@ func (ma *MyAPI) GetMethod() string {
 	return ma.Method
 }
 
-func NewAPI() types.MessageAPI {
+func NewAPI() transports.MessageAPI {
 	return &MyAPI{}
 }
 ```
@@ -106,7 +106,7 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 
 ```golang
 	// Create the channel for incoming messages and attach to transport
-	listener := make(chan types.Message)
+	listener := make(chan transports.Message)
 
 	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint interface
 	ep := endpoint.HTTPWSEndPoint{}
@@ -157,14 +157,14 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 And write the handlers
 
 ```golang
-func hello(rr types.RouterRequest) {
+func hello(rr router.RouterRequest) {
 	msg := &message.MyAPI{}
 	msg.ID = rr.Id
 	msg.Reply = fmt.Sprintf("hello! got your message with ID %s", rr.Id)
 	rr.Send(router.BuildReply(msg, rr))
 }
 
-func addKey(rr types.RouterRequest) {
+func addKey(rr router.RouterRequest) {
 	msg := &message.MyAPI{}
 
 	if ok := rr.Signer.Authorized[rr.Address]; ok {
@@ -178,7 +178,7 @@ func addKey(rr types.RouterRequest) {
 	rr.Send(router.BuildReply(msg, rr))
 }
 
-func getSecret(rr types.RouterRequest) {
+func getSecret(rr router.RouterRequest) {
 	msg := &message.MyAPI{Reply: "the secret is foobar123456"}
 	rr.Send(router.BuildReply(msg, rr))
 }

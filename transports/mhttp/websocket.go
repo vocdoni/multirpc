@@ -10,17 +10,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/transports"
 	"gitlab.com/vocdoni/go-dvote/log"
 	"nhooyr.io/websocket"
 )
 
 // WebsocketHandle handles the websockets connection on the go-dvote proxy
 type WebsocketHandle struct {
-	Connection *types.Connection // the ws connection
-	WsProxy    *Proxy            // proxy where the ws will be associated
+	Connection *transports.Connection // the ws connection
+	WsProxy    *Proxy                 // proxy where the ws will be associated
 
-	internalReceiver chan types.Message
+	internalReceiver chan transports.Message
 }
 
 type WebsocketContext struct {
@@ -31,7 +31,7 @@ func (c WebsocketContext) ConnectionType() string {
 	return "Websocket"
 }
 
-func (c *WebsocketContext) Send(msg types.Message) error {
+func (c *WebsocketContext) Send(msg transports.Message) error {
 	return c.Conn.Write(context.TODO(), websocket.MessageBinary, msg.Data)
 }
 
@@ -41,12 +41,12 @@ func (w *WebsocketHandle) SetProxy(p *Proxy) {
 }
 
 // Init initializes the websockets handler and the internal channel to communicate with other go-dvote components
-func (w *WebsocketHandle) Init(c *types.Connection) error {
-	w.internalReceiver = make(chan types.Message, 1)
+func (w *WebsocketHandle) Init(c *transports.Connection) error {
+	w.internalReceiver = make(chan transports.Message, 1)
 	return nil
 }
 
-func getWsHandler(path string, receiver chan types.Message) func(conn *websocket.Conn) {
+func getWsHandler(path string, receiver chan transports.Message) func(conn *websocket.Conn) {
 	return func(conn *websocket.Conn) {
 		// Read websocket messages until the connection is closed. HTTP
 		// handlers are run in new goroutines, so we don't need to spawn
@@ -57,7 +57,7 @@ func getWsHandler(path string, receiver chan types.Message) func(conn *websocket
 				conn.Close(websocket.StatusAbnormalClosure, "ws closed by client")
 				break
 			}
-			msg := types.Message{
+			msg := transports.Message{
 				Data:      payload,
 				TimeStamp: int32(time.Now().Unix()),
 				Context:   &WebsocketContext{Conn: conn},
@@ -79,7 +79,7 @@ func (w *WebsocketHandle) ConnectionType() string {
 }
 
 // Listen will listen the websockets handler and write the received data into the channel
-func (w *WebsocketHandle) Listen(receiver chan<- types.Message) {
+func (w *WebsocketHandle) Listen(receiver chan<- transports.Message) {
 	for {
 		msg := <-w.internalReceiver
 		receiver <- msg
@@ -96,12 +96,12 @@ func (w *WebsocketHandle) AddNamespace(namespace string) error {
 }
 
 // Send sends the response given a message
-func (w *WebsocketHandle) Send(msg types.Message) error {
+func (w *WebsocketHandle) Send(msg transports.Message) error {
 	// TODO(mvdan): this extra abstraction layer is probably useless
 	return msg.Context.(*WebsocketContext).Send(msg)
 }
 
-func (w *WebsocketHandle) SendUnicast(address string, msg types.Message) error {
+func (w *WebsocketHandle) SendUnicast(address string, msg transports.Message) error {
 	// WebSocket is not p2p so sendUnicast makes the same of Send()
 	return w.Send(msg)
 }

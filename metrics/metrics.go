@@ -9,6 +9,12 @@ import (
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
+// MetricsCfg initializes the metrics config
+type Metrics struct {
+	Enabled         bool
+	RefreshInterval int
+}
+
 // Agent struct with options
 type Agent struct {
 	Path            string

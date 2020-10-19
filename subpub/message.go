@@ -4,7 +4,7 @@ import (
 	"bufio"
 
 	"github.com/libp2p/go-libp2p-core/network"
-	"github.com/vocdoni/multirpc/types"
+	"github.com/vocdoni/multirpc/transports"
 	"gitlab.com/vocdoni/go-dvote/log"
 )
 
@@ -17,7 +17,7 @@ func (mc *MessageContext) ConnectionType() string {
 	return "subpub"
 }
 
-func (mc *MessageContext) Send(m types.Message) error {
+func (mc *MessageContext) Send(m transports.Message) error {
 	_, err := mc.Stream.Write(m.Data)
 	return err
 }
