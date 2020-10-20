@@ -1,6 +1,6 @@
 # multirpc
 
-A JSON driven, signature ready, letsencrypt compatible modular RPC stack for multiple transports.
+A JSON driven, signature ready, flexible and modular RPC stack for multiple transports.
 
 This GoLang module provides a full stack for implementing a flexible RPC service.
 The same mux router could be used for providing service to multiple network transports in paralel.
