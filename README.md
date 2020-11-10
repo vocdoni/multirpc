@@ -237,3 +237,7 @@ $ echo '{"method":"getsecret"}' | go run example/httpws/client/client.go -key=4f
 
 {"reply":"the secret is foobar123456","request":"691","timestamp":1602593187}
 ```
+
+## Examples
+
+Find here a more advanced example on how to use multirpc: https://github.com/vocdoni/tokenstate/blob/master/api/api.go
