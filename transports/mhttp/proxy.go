@@ -33,9 +33,10 @@ type ProxyWsHandler func(c *websocket.Conn)
 
 // Proxy represents a proxy
 type Proxy struct {
-	Conn   *transports.Connection
-	Server *chi.Mux
-	Addr   net.Addr
+	Conn      *transports.Connection
+	Server    *chi.Mux
+	Addr      net.Addr
+	TLSConfig *tls.Config
 }
 
 // NewProxy creates a new proxy instance
@@ -132,6 +133,7 @@ func (p *Proxy) Init() error {
 			IdleTimeout:       60 * time.Second,
 			ReadHeaderTimeout: 2 * time.Second,
 			Handler:           p.Server,
+			TLSConfig:         p.TLSConfig,
 		}
 		go func() {
 			log.Fatal(s.Serve(ln))
