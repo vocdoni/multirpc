@@ -107,14 +107,17 @@ func (p *Proxy) Init() error {
 
 	if len(p.Conn.TLSdomain) > 0 {
 		log.Infof("fetching letsencrypt TLS certificate for %s", p.Conn.TLSdomain)
-		s, m := p.GenerateSSLCertificate()
+		s, m := p.GenerateSSLCertificate(p.TLSConfig)
 		s.ReadTimeout = 5 * time.Second
 		s.WriteTimeout = 10 * time.Second
 		s.IdleTimeout = 30 * time.Second
 		s.ReadHeaderTimeout = 2 * time.Second
 		s.Handler = p.Server
-		log.Info("starting go-chi https server")
+		if err := http2.ConfigureServer(s, nil); err != nil {
+			return err
+		}
 		go func() {
+			log.Info("starting go-chi https server")
 			log.Fatal(s.ServeTLS(ln, "", ""))
 		}()
 		certs, err := getCertificates(p.Conn.TLSdomain, m)
@@ -149,18 +152,19 @@ func (p *Proxy) Init() error {
 }
 
 // GenerateSSLCertificate generates a SSL certificated for the proxy
-func (p *Proxy) GenerateSSLCertificate() (*http.Server, *autocert.Manager) {
+func (p *Proxy) GenerateSSLCertificate(tlsConfig *tls.Config) (*http.Server, *autocert.Manager) {
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(p.Conn.TLSdomain),
 		Cache:      autocert.DirCache(p.Conn.TLScertDir),
 	}
-
+	if tlsConfig == nil {
+		tlsConfig = &tls.Config{}
+	}
+	tlsConfig.GetCertificate = m.GetCertificate
 	serverConfig := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", p.Conn.Address, p.Conn.Port), // 443 ssl
-		TLSConfig: &tls.Config{
-			GetCertificate: m.GetCertificate,
-		},
+		Addr:      fmt.Sprintf("%s:%d", p.Conn.Address, p.Conn.Port), // 443 tls
+		TLSConfig: tlsConfig,
 	}
 	serverConfig.TLSConfig.NextProtos = append(serverConfig.TLSConfig.NextProtos, acme.ALPNProto)
 
