@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
+	"golang.org/x/net/http2"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -134,6 +135,9 @@ func (p *Proxy) Init() error {
 			ReadHeaderTimeout: 2 * time.Second,
 			Handler:           p.Server,
 			TLSConfig:         p.TLSConfig,
+		}
+		if err := http2.ConfigureServer(s, nil); err != nil {
+			return err
 		}
 		go func() {
 			log.Fatal(s.Serve(ln))

@@ -20,6 +20,7 @@ require (
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	golang.org/x/mod v0.3.0 // indirect
+	golang.org/x/net v0.0.0-20201002202402-0a1ea396d57c
 	golang.org/x/tools v0.0.0-20200617042924-7f3f4b10a808 // indirect
 	nhooyr.io/websocket v1.8.6
 )
