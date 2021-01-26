@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -15,6 +16,7 @@ type HTTPapi struct {
 	ListenPort int32
 	TLSdomain  string
 	TLSdirCert string
+	TLSconfig  *tls.Config
 	Metrics    *metrics.Metrics
 }
 
@@ -61,6 +63,12 @@ func (e *HTTPWSEndPoint) SetOption(name string, value interface{}) error {
 			return fmt.Errorf("tlsDirCert must be a valid string")
 		}
 		e.config.TLSdirCert = value.(string)
+	case "tlsConfig":
+		if tc, ok := value.(*tls.Config); !ok {
+			return fmt.Errorf("tlsConfig must be of type *tls.Config")
+		} else {
+			e.config.TLSconfig = tc
+		}
 	case "metricsInterval":
 		if fmt.Sprintf("%T", value) != "int" {
 			return fmt.Errorf("metricsInterval must be a valid int")
@@ -83,6 +91,7 @@ func (e *HTTPWSEndPoint) Init(listener chan transports.Message) error {
 	if err != nil {
 		return err
 	}
+	pxy.TLSConfig = e.config.TLSconfig
 
 	// Create a HTTP+Websocket transport and attach the proxy
 	ts := new(mhttp.HttpWsHandler)
