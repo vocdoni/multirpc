@@ -26,8 +26,8 @@ import (
 	"github.com/vocdoni/multirpc/router"
 	"github.com/vocdoni/multirpc/transports"
 
-	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
-	"gitlab.com/vocdoni/go-dvote/log"
+	"go.vocdoni.io/dvote/crypto/ethereum"
+	"go.vocdoni.io/dvote/log"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"github.com/vocdoni/multirpc/metrics"
 	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/transports/mhttp"
-	"gitlab.com/vocdoni/go-dvote/log"
+	"go.vocdoni.io/dvote/log"
 )
 
 type HTTPapi struct {

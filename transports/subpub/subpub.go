@@ -7,7 +7,7 @@ import (
 
 	"github.com/vocdoni/multirpc/subpub"
 	"github.com/vocdoni/multirpc/transports"
-	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
+	"go.vocdoni.io/dvote/crypto/ethereum"
 )
 
 type SubPubHandle struct {

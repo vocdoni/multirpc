@@ -9,9 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/vocdoni/multirpc/transports"
-	"gitlab.com/vocdoni/go-dvote/crypto"
-	"gitlab.com/vocdoni/go-dvote/crypto/ethereum"
-	"gitlab.com/vocdoni/go-dvote/log"
+	"go.vocdoni.io/dvote/crypto"
+	"go.vocdoni.io/dvote/crypto/ethereum"
+	"go.vocdoni.io/dvote/log"
 )
 
 type RouterRequest struct {
@@ -29,8 +29,8 @@ type RouterRequest struct {
 type RequestMessage struct {
 	MessageAPI json.RawMessage `json:"request"`
 
-	ID        string `json:"id"`
-	Signature string `json:"signature"`
+	ID        string   `json:"id"`
+	Signature HexBytes `json:"signature"`
 }
 
 type registeredMethod struct {
@@ -197,7 +197,12 @@ func (r *Router) SendError(request RouterRequest, errMsg string) {
 	}
 
 	// Sign the marshaled inner response.
-	response.Signature, err = r.signer.Sign(response.MessageAPI)
+	messagePayload, err := response.MessageAPI.MarshalJSON()
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	response.Signature, err = r.signer.Sign(messagePayload)
 	if err != nil {
 		log.Error(err)
 		// continue without the signature
