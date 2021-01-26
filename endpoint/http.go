@@ -11,17 +11,8 @@ import (
 	"go.vocdoni.io/dvote/log"
 )
 
-type HTTPapi struct {
-	ListenHost string
-	ListenPort int32
-	TLSdomain  string
-	TLSdirCert string
-	TLSconfig  *tls.Config
-	Metrics    *metrics.Metrics
-}
-
-// HTTPWSEndPoint handles an HTTP + Websocket connection (client chooses).
-type HTTPWSEndPoint struct {
+// HTTPEndPoint handles the HTTP connection
+type HTTPEndPoint struct {
 	Proxy        *mhttp.Proxy
 	MetricsAgent *metrics.Agent
 	transport    transports.Transport
@@ -30,18 +21,18 @@ type HTTPWSEndPoint struct {
 }
 
 // ID returns the name of the transport implemented on the endpoint
-func (e *HTTPWSEndPoint) ID() string {
+func (e *HTTPEndPoint) ID() string {
 	return e.id
 }
 
 // Transport returns the transport used for this endpoint
-func (e *HTTPWSEndPoint) Transport() transports.Transport {
+func (e *HTTPEndPoint) Transport() transports.Transport {
 	return e.transport
 }
 
 // SetOption configures a endpoint option, valid options are:
 // listenHost:string, listenPort:int32, tlsDomain:string, tlsDirCert:string, metricsInterval:int
-func (e *HTTPWSEndPoint) SetOption(name string, value interface{}) error {
+func (e *HTTPEndPoint) SetOption(name string, value interface{}) error {
 	switch name {
 	case "listenHost":
 		if fmt.Sprintf("%T", value) != "string" {
@@ -83,7 +74,7 @@ func (e *HTTPWSEndPoint) SetOption(name string, value interface{}) error {
 }
 
 // Init creates a new websockets/http mixed endpoint
-func (e *HTTPWSEndPoint) Init(listener chan transports.Message) error {
+func (e *HTTPEndPoint) Init(listener chan transports.Message) error {
 	log.Infof("creating API service")
 
 	// Create a HTTP Proxy service
@@ -94,7 +85,7 @@ func (e *HTTPWSEndPoint) Init(listener chan transports.Message) error {
 	pxy.TLSConfig = e.config.TLSconfig
 
 	// Create a HTTP+Websocket transport and attach the proxy
-	ts := new(mhttp.HttpWsHandler)
+	ts := new(mhttp.HttpHandler)
 	ts.Init(new(transports.Connection))
 	ts.SetProxy(pxy)
 	go ts.Listen(listener)
@@ -104,24 +95,9 @@ func (e *HTTPWSEndPoint) Init(listener chan transports.Message) error {
 	if e.config.Metrics != nil && e.config.Metrics.Enabled {
 		ma = metrics.NewAgent("/metrics", time.Second*time.Duration(e.config.Metrics.RefreshInterval), pxy)
 	}
-	e.id = "httpws"
+	e.id = "http"
 	e.Proxy = pxy
 	e.MetricsAgent = ma
 	e.transport = ts
 	return nil
-}
-
-// proxy creates a new service for routing HTTP connections using go-chi server
-// if tlsDomain is specified, it will use letsencrypt to fetch a valid TLS certificate
-func proxy(host string, port int32, tlsDomain, tlsDir string) (*mhttp.Proxy, error) {
-	pxy := mhttp.NewProxy()
-	pxy.Conn.TLSdomain = tlsDomain
-	pxy.Conn.TLScertDir = tlsDir
-	pxy.Conn.Address = host
-	pxy.Conn.Port = port
-	log.Infof("creating proxy service, listening on %s:%d", host, port)
-	if pxy.Conn.TLSdomain != "" {
-		log.Infof("configuring proxy with TLS domain %s", tlsDomain)
-	}
-	return pxy, pxy.Init()
 }
