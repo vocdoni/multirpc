@@ -23,10 +23,10 @@ The multirpc stack is integrated by three components:
 An endpoint is attached to a specific transport and the API consumer only needs to write Handlers that interacts with the Router.
 
 ```
-                             [ROUTER] <--> [Custom Handlers]
-[endpoint1] -> [transport1]---/ / / 
-[endpoint2] -> [transport2]----/ /
-[endpoint3] -> [transport1]-----/ 
+                                      [ROUTER] <--> [Custom Handlers]
+User -> [endpoint1] -> [transport1]---/ / / 
+User -> [endpoint2] -> [transport2]----/ /
+User -> [endpoint3] -> [transport1]-----/ 
 ```
 
 Current transports supported:
@@ -55,7 +55,7 @@ All JSON requests follows the next schema which is automatically handled by this
 }
 ```
 
-The module consumer only needs to provide a compatible (`transports.MessageAPI`) struct, as the following example:
+The developer only needs to provide a compatible (`transports.MessageAPI`) interface type, as the following example:
 
 ```golang
 type MyAPI struct {
@@ -109,12 +109,13 @@ To start the HTTP(s) +  Websocket multirpc stack, the `endpoint` package can be 
 	listener := make(chan transports.Message)
 
 	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint interface
-	ep := endpoint.HTTPWSEndPoint{}
+	ep := endpoint.HTTPWSendPoint{}
 
 	// Configures the endpoint
-	ep.SetOption("listenHost", "0.0.0.0")
-	ep.SetOption("listenPort", int32(7788))
-	ep.SetOption("tlsDomain", "")
+	ep.SetOption(endpoint.OptionListenHost, "0.0.0.0")
+	ep.SetOption(endpoint.OptionListenPort, int32(7788))
+	ep.SetOption(endpoint.OptionTLSdomain, "")
+	ep.SetOption(endpoint.SetMode, endpoint.ModeHTTPWS) 
 
 	err := ep.Init(listener)
 	if err != nil {

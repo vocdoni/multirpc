@@ -34,7 +34,7 @@ func main() {
 	log.Init("debug", "stdout")
 
 	// API configuration
-	api := &endpoint.HTTPapi{
+	api := &endpoint.HTTPWSconfig{
 		ListenHost: "0.0.0.0",
 		ListenPort: 7788,
 	}
@@ -46,12 +46,13 @@ func main() {
 	listener := make(chan transports.Message)
 
 	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint interface
-	ep := endpoint.HTTPWSEndPoint{}
+	ep := endpoint.HTTPWSendPoint{}
 
 	// Configures the endpoint
-	ep.SetOption("listenHost", api.ListenHost)
-	ep.SetOption("listenPort", api.ListenPort)
-	ep.SetOption("tlsDomain", api.TLSdomain)
+	ep.SetOption(endpoint.OptionListenHost, api.ListenHost)
+	ep.SetOption(endpoint.OptionListenPort, api.ListenPort)
+	ep.SetOption(endpoint.OptionTLSdomain, api.TLSdomain)
+	ep.SetOption(endpoint.OptionSetMode, endpoint.ModeHTTPWS)
 
 	err := ep.Init(listener)
 	if err != nil {
