@@ -29,7 +29,7 @@ func (ps *SubPub) handleStream(stream network.Stream) {
 	if fn := ps.onPeerAdd; fn != nil {
 		fn(pid)
 	}
-	log.Infof("connected to peer %s", pid)
+	log.Infof("connected to peer %s: %+v", pid, stream.Conn().RemoteMultiaddr())
 	go ps.broadcastHandler(write, bufio.NewWriter(stream))
 }
 
@@ -53,7 +53,6 @@ func (ps *SubPub) broadcastHandler(write <-chan []byte, w *bufio.Writer) {
 
 func (ps *SubPub) readHandler(stream network.Stream) {
 	r := bufio.NewReader(stream)
-
 	for {
 		select {
 		case <-ps.close:
@@ -63,8 +62,12 @@ func (ps *SubPub) readHandler(stream network.Stream) {
 		}
 		message, err := r.ReadBytes(byte(delimiter))
 		if err != nil {
-			log.Debugf("error reading from buffer: %s", err)
+			stream.Close()
+			log.Debugf("error reading from buffer %s: %s", stream.Conn().RemotePeer().Pretty(), err)
 			return
+		} else if len(message) == 0 {
+			log.Debugf("no data could be read from stream: %s (%+v)", stream.Conn().RemotePeer().Pretty(), stream.Stat())
+			continue
 		}
 		// Remove delimiter
 		message = message[:len(message)-1]
@@ -76,7 +79,6 @@ func (ps *SubPub) readHandler(stream network.Stream) {
 				continue
 			}
 		}
-		log.Debugf("message received: %s", message)
-		go func() { ps.Reader <- MessageContext{Message: message, Stream: stream} }()
+		go func() { ps.Reader <- message }()
 	}
 }

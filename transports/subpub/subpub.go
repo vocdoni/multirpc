@@ -29,25 +29,23 @@ func (p *SubPubHandle) Init(c *transports.Connection) error {
 		p.Conn.Port = 45678
 	}
 	private := p.Conn.Encryption == "private"
-	sp := subpub.NewSubPub(s.Private, []byte(p.Conn.TransportKey), p.Conn.Port, private)
+	sp := subpub.NewSubPub(s.Private, []byte(p.Conn.TransportKey), int32(p.Conn.Port), private)
 	c.Address = sp.PubKey
 	p.SubPub = sp
 	return nil
 }
 
 func (s *SubPubHandle) Listen(reciever chan<- transports.Message) {
-	ctx := context.TODO()
-	s.SubPub.Start(ctx)
-	go s.SubPub.Subscribe(ctx)
-	var msg transports.Message
-	var msgctx subpub.MessageContext
-	for {
-		msgctx = <-s.SubPub.Reader
-		msg.Data = msgctx.Message
-		msg.TimeStamp = int32(time.Now().Unix())
-		msg.Context = &msgctx
-		reciever <- msg
-	}
+	s.SubPub.Start(context.Background())
+	go s.SubPub.Subscribe(context.Background())
+	go func() {
+		for {
+			var msg transports.Message
+			msg.Data = <-s.SubPub.Reader
+			msg.TimeStamp = int32(time.Now().Unix())
+			reciever <- msg
+		}
+	}()
 }
 
 func (s *SubPubHandle) Address() string {
@@ -71,9 +69,6 @@ func (s *SubPubHandle) ConnectionType() string {
 }
 
 func (s *SubPubHandle) Send(msg transports.Message) error {
-	if msg.Context != nil {
-		return msg.Context.Send(msg)
-	}
 	s.SubPub.BroadcastWriter <- msg.Data
 	return nil
 }
@@ -84,9 +79,8 @@ func (s *SubPubHandle) AddNamespace(namespace string) error {
 }
 
 func (s *SubPubHandle) SendUnicast(address string, msg transports.Message) error {
-	// TBD: check if send unicast is really needed, maybe with Send() and the MessageContext the same can be achieved
 	if err := s.SubPub.PeerStreamWrite(address, msg.Data); err != nil {
-		return fmt.Errorf("cannot send message to %s: (%s)", address, err)
+		return fmt.Errorf("cannot send message to %s: (%w)", address, err)
 	}
 	return nil
 }

@@ -34,7 +34,7 @@ type SubPub struct {
 	GroupKey        [32]byte
 	Topic           string
 	BroadcastWriter chan []byte
-	Reader          chan MessageContext
+	Reader          chan []byte
 	NoBootStrap     bool
 	BootNodes       []string
 	PubKey          string
@@ -78,7 +78,7 @@ func NewSubPub(key ecdsa.PrivateKey, groupKey []byte, port int32, private bool) 
 	ps.PubKey = hex.EncodeToString(eth.CompressPubkey(&key.PublicKey))
 	ps.privKey = hex.EncodeToString(key.D.Bytes())
 	ps.BroadcastWriter = make(chan []byte)
-	ps.Reader = make(chan MessageContext)
+	ps.Reader = make(chan []byte)
 	ps.Port = port
 	ps.Private = private
 	ps.DiscoveryPeriod = time.Second * 10
@@ -88,7 +88,7 @@ func NewSubPub(key ecdsa.PrivateKey, groupKey []byte, port int32, private bool) 
 	return ps
 }
 
-// Connect starts the SubPub networking stack
+// Start connects  the SubPub networking stack
 func (ps *SubPub) Start(ctx context.Context) {
 	log.Infof("public address: %s", ps.PubKey)
 	log.Infof("private key: %s", ps.privKey)
@@ -116,7 +116,7 @@ func (ps *SubPub) Start(ctx context.Context) {
 		c.PSK = ps.GroupKey[:32]
 	}
 	c.ListenAddrs = []multiaddr.Multiaddr{sourceMultiAddr}
-	c.ConnManager = connmanager.NewConnManager(int(ps.MaxDHTpeers/2), ps.MaxDHTpeers, time.Second*10)
+	c.ConnManager = connmanager.NewConnManager(ps.MaxDHTpeers/2, ps.MaxDHTpeers, time.Second*10)
 
 	log.Debugf("libp2p config: %+v", c)
 	// Note that we don't use ctx here, since we stop via the Close method.
