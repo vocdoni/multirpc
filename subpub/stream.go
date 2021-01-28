@@ -2,7 +2,9 @@ package subpub
 
 import (
 	"bufio"
+	"io"
 
+	"git.sr.ht/~sircmpwn/go-bare"
 	"github.com/libp2p/go-libp2p-core/network"
 	"go.vocdoni.io/dvote/log"
 )
@@ -25,7 +27,7 @@ func (ps *SubPub) handleStream(stream network.Stream) {
 	pid := stream.Conn().RemotePeer()
 	ps.PeersMu.Lock()
 	defer ps.PeersMu.Unlock()
-	ps.Peers = append(ps.Peers, peerSub{pid, write})
+	ps.Peers = append(ps.Peers, peerSub{pid, write}) // TO-DO this should be a map
 	if fn := ps.onPeerAdd; fn != nil {
 		fn(pid)
 	}
@@ -60,24 +62,23 @@ func (ps *SubPub) readHandler(stream network.Stream) {
 		default:
 			// continues below
 		}
-		message, err := r.ReadBytes(byte(delimiter))
-		if err != nil {
+		message := new(Message)
+		if err := bare.UnmarshalReader(io.Reader(r), message); err != nil {
+			log.Debugf("error reading stream buffer %s: %v", stream.Conn().RemotePeer().Pretty(), err)
 			stream.Close()
-			log.Debugf("error reading from buffer %s: %s", stream.Conn().RemotePeer().Pretty(), err)
 			return
-		} else if len(message) == 0 {
+		} else if len(message.Data) == 0 {
 			log.Debugf("no data could be read from stream: %s (%+v)", stream.Conn().RemotePeer().Pretty(), stream.Stat())
 			continue
 		}
-		// Remove delimiter
-		message = message[:len(message)-1]
 		if !ps.Private {
 			var ok bool
-			message, ok = ps.decrypt(string(message))
+			message.Data, ok = ps.decrypt(message.Data)
 			if !ok {
 				log.Warn("cannot decrypt message")
 				continue
 			}
+			message.Peer = stream.Conn().RemotePeer().String()
 		}
 		go func() { ps.Reader <- message }()
 	}

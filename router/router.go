@@ -218,7 +218,9 @@ func (r *Router) SendError(request RouterRequest, errMsg string) {
 			Context:   request.MessageContext,
 			Data:      data,
 		}
-		request.Send(msg)
+		if err := request.Send(msg); err != nil {
+			log.Warn(err)
+		}
 	}
 }
 

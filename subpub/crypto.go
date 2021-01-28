@@ -2,7 +2,6 @@ package subpub
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"io"
 
 	"go.vocdoni.io/dvote/log"
@@ -10,22 +9,18 @@ import (
 )
 
 // encrypt using symetric key
-func (ps *SubPub) encrypt(msg []byte) string {
+func (ps *SubPub) encrypt(msg []byte) []byte {
 	var nonce [24]byte
 	if _, err := io.ReadFull(rand.Reader, nonce[:]); err != nil {
 		log.Error(err)
-		return ""
+		return nil
 	}
-	return base64.StdEncoding.EncodeToString(secretbox.Seal(nonce[:], msg, &nonce, &ps.GroupKey))
+	return secretbox.Seal(nonce[:], msg, &nonce, &ps.GroupKey)
 }
 
 // decrypt using symetric key
-func (ps *SubPub) decrypt(b64msg string) ([]byte, bool) {
-	msg, err := base64.StdEncoding.DecodeString(b64msg)
-	if err != nil {
-		return nil, false
-	}
-	if len(msg) < 25 {
+func (ps *SubPub) decrypt(msg []byte) ([]byte, bool) {
+	if msg == nil {
 		return nil, false
 	}
 	var decryptNonce [24]byte

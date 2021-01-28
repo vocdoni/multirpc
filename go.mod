@@ -3,13 +3,15 @@ module github.com/vocdoni/multirpc
 go 1.15
 
 require (
+	git.sr.ht/~sircmpwn/go-bare v0.0.0-20201210182351-86af428a8287
 	github.com/ethereum/go-ethereum v1.9.26-0.20201212163632-00d10e610f9f
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/cors v1.1.1
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/ipfs/go-log v1.0.4
-	github.com/libp2p/go-libp2p v0.12.0
+	github.com/libp2p/go-libp2p v0.13.0
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
-	github.com/libp2p/go-libp2p-core v0.7.0
+	github.com/libp2p/go-libp2p-core v0.8.0
 	github.com/libp2p/go-libp2p-discovery v0.5.0
 	github.com/libp2p/go-libp2p-kad-dht v0.11.1
 	github.com/libp2p/go-reuseport v0.0.2
@@ -18,7 +20,9 @@ require (
 	github.com/prometheus/client_golang v1.9.0
 	go.uber.org/zap v1.16.0
 	go.vocdoni.io/dvote v0.6.1-0.20210125120603-df82783bb500
-	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620
-	golang.org/x/net v0.0.0-20201216054612-986b41b23924
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
+	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/text v0.3.5 // indirect
 	nhooyr.io/websocket v1.8.6
 )

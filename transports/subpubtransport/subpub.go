@@ -8,7 +8,20 @@ import (
 	"github.com/vocdoni/multirpc/subpub"
 	"github.com/vocdoni/multirpc/transports"
 	"go.vocdoni.io/dvote/crypto/ethereum"
+	"go.vocdoni.io/dvote/log"
 )
+
+type SubPubContext struct {
+	Sp     *SubPubHandle
+	PeerID string
+}
+
+func (sc *SubPubContext) ConnectionType() string {
+	return "subpub"
+}
+func (sc *SubPubContext) Send(msg transports.Message) (err error) {
+	return sc.Sp.SendUnicast(sc.PeerID, msg)
+}
 
 type SubPubHandle struct {
 	Conn      *transports.Connection
@@ -41,8 +54,11 @@ func (s *SubPubHandle) Listen(reciever chan<- transports.Message) {
 	go func() {
 		for {
 			var msg transports.Message
-			msg.Data = <-s.SubPub.Reader
+			spmsg := <-s.SubPub.Reader
+			msg.Data = spmsg.Data
 			msg.TimeStamp = int32(time.Now().Unix())
+			msg.Context = &SubPubContext{PeerID: spmsg.Peer, Sp: s}
+			log.Debugf("received: %s", msg.Data)
 			reciever <- msg
 		}
 	}()
@@ -69,6 +85,7 @@ func (s *SubPubHandle) ConnectionType() string {
 }
 
 func (s *SubPubHandle) Send(msg transports.Message) error {
+	log.Debugf("sending %s", msg.Data)
 	s.SubPub.BroadcastWriter <- msg.Data
 	return nil
 }

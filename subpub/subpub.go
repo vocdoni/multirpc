@@ -26,15 +26,13 @@ import (
 	"go.vocdoni.io/dvote/util"
 )
 
-const delimiter = '\x00'
-
 // SubPub is a simplified PubSub protocol using libp2p
 type SubPub struct {
 	Key             ecdsa.PrivateKey
 	GroupKey        [32]byte
 	Topic           string
 	BroadcastWriter chan []byte
-	Reader          chan []byte
+	Reader          chan *Message
 	NoBootStrap     bool
 	BootNodes       []string
 	PubKey          string
@@ -46,7 +44,7 @@ type SubPub struct {
 	MaxDHTpeers     int
 
 	PeersMu sync.RWMutex
-	Peers   []peerSub
+	Peers   []peerSub // TODO(p4u): this should be a map
 
 	DiscoveryPeriod  time.Duration
 	CollectionPeriod time.Duration
@@ -60,6 +58,11 @@ type SubPub struct {
 	// These are useful for testing.
 	onPeerAdd    func(id libpeer.ID)
 	onPeerRemove func(id libpeer.ID)
+}
+
+type Message struct {
+	Data []byte
+	Peer string
 }
 
 // NewSubPub creates a new SubPub instance.
@@ -78,7 +81,7 @@ func NewSubPub(key ecdsa.PrivateKey, groupKey []byte, port int32, private bool) 
 	ps.PubKey = hex.EncodeToString(eth.CompressPubkey(&key.PublicKey))
 	ps.privKey = hex.EncodeToString(key.D.Bytes())
 	ps.BroadcastWriter = make(chan []byte)
-	ps.Reader = make(chan []byte)
+	ps.Reader = make(chan *Message)
 	ps.Port = port
 	ps.Private = private
 	ps.DiscoveryPeriod = time.Second * 10
