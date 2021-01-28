@@ -1,20 +1,18 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"math/rand"
-	"net"
-	"os"
-	"strings"
+	"net/http"
 	"time"
 
 	"github.com/vocdoni/multirpc/example/subpub/message"
 	"github.com/vocdoni/multirpc/router"
 	"github.com/vocdoni/multirpc/transports"
+	"github.com/vocdoni/multirpc/transports/mhttp"
 	"github.com/vocdoni/multirpc/transports/subpubtransport"
 	"go.vocdoni.io/dvote/crypto"
 	"go.vocdoni.io/dvote/crypto/ethereum"
@@ -57,8 +55,6 @@ func main() {
 		TransportKey: sharedKey,
 	}
 	sp := subpubtransport.SubPubHandle{}
-	//sp := subpub.NewSubPub(signer.Private,ethereum.HashRaw([]byte(sharedKey)), 7799, false)
-	//sp.Start()
 
 	if err := sp.Init(&conn); err != nil {
 		log.Fatal(err)
@@ -66,58 +62,54 @@ func main() {
 	msg := make(chan transports.Message)
 	sp.Listen(msg)
 
-	log.Info("UNIX socket created at /tmp/subpub.sock")
-	l, err := net.Listen("unix", "/tmp/subpub.sock")
+	pxy, err := proxy("127.0.0.1", 8080)
 	if err != nil {
-		log.Fatal("listen error:", err)
+		log.Fatal(err)
 	}
-	defer os.Remove("/tmp/subpub.sock")
 
-	var req *message.MyAPI
-	read := func(close chan (bool), fd net.Conn) {
-		log.Infof("listening to subpub and writing to the unix socket")
+	pxy.AddHandler("/p2p", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "", http.StatusInternalServerError)
+			log.Errorf("failed to read request body: %v", err)
+			return
+		}
+		req := processLine(body)
+		if err := sp.Send(transports.Message{Data: buildRequest(req, signer), Namespace: "/main"}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Accept", "application/json")
+
+		log.Infof("waiting for reply...")
+		st := time.Now()
 		for {
 			select {
 			case data := <-msg:
-				fmt.Printf("Peer:%s %s", data.Context.(*subpubtransport.SubPubContext).PeerID, data.Data)
-				fd.Write(data.Data)
-			case <-close:
-				log.Warnf("EOF")
+				log.Infof("peer:%s data:%s", data.Context.(*subpubtransport.SubPubContext).PeerID, data.Data)
+				w.Write(data.Data)
+				w.Write([]byte("\n"))
 				return
+			default:
+				if time.Since(st) > time.Duration(time.Second*5) {
+					log.Warnf("request timeout")
+					w.Write([]byte("{\"error\": \"timeout\"}"))
+					w.Write([]byte("\n"))
+					return
+				}
 			}
 		}
-	}
 
-	for {
-		fd, err := l.Accept()
-		if err != nil {
-			log.Fatal("accept error:", err)
-		}
-		close := make(chan (bool), 1)
-		go read(close, fd)
-		reader := bufio.NewReader(fd)
-		for {
-			line, _, err := reader.ReadLine()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				panic(err)
-			}
-			if len(line) < 7 || strings.HasPrefix(string(line), "#") {
-				continue
-			}
-			req = processLine(line)
-			if err := sp.Send(transports.Message{Data: Request(req, signer), Namespace: "/main"}); err != nil {
-				log.Error(err)
-				continue
-			}
-		}
-		close <- true
-	}
+	})
+
+	select {}
 }
 
-func Request(req *message.MyAPI, signer *ethereum.SignKeys) []byte {
+func buildRequest(req *message.MyAPI, signer *ethereum.SignKeys) []byte {
 	// Prepare and send request
 	req.Timestamp = (int32(time.Now().Unix()))
 	req.ID = fmt.Sprintf("%d", rand.Intn(1000))
@@ -144,4 +136,12 @@ func Request(req *message.MyAPI, signer *ethereum.SignKeys) []byte {
 	}
 	return reqBody
 
+}
+
+func proxy(host string, port int32) (*mhttp.Proxy, error) {
+	pxy := mhttp.NewProxy()
+	pxy.Conn.Address = host
+	pxy.Conn.Port = port
+	log.Infof("creating proxy service, listening on %s:%d", host, port)
+	return pxy, pxy.Init()
 }

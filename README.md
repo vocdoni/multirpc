@@ -241,4 +241,6 @@ $ echo '{"method":"getsecret"}' | go run example/httpws/client/client.go -key=4f
 
 ## Examples
 
-Find here a more advanced example on how to use multirpc: https://github.com/vocdoni/tokenstate/blob/master/api/api.go
+Find here a more advanced example on how to use multirpc with libp2p transport: https://github.com/vocdoni/multirpc/tree/master/example/subpub
+
+Another example using HTTP+WS transport: https://github.com/vocdoni/tokenstate/blob/master/api/api.go

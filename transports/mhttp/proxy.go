@@ -241,25 +241,25 @@ func (p *Proxy) AddEndpoint(url string) func(writer http.ResponseWriter, reader 
 
 func (p *Proxy) ProxyIPC(path string) http.HandlerFunc {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		log.Debugf("%s", path)
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(rw, "", http.StatusInternalServerError)
 			log.Errorf("failed to read request body: %v", err)
 			return
 		}
-		log.Debugf("request: %s", body)
+		log.Debugf("ipc request: %s", body)
 		conn, err := net.Dial("unix", path)
 		if err != nil {
 			http.Error(rw, "could not dial IPC socket", http.StatusInternalServerError)
 			log.Errorf("could not dial IPC socket: %v", err)
 			return
 		}
-		if _, err := conn.Write(body); err != nil {
+		if _, err := conn.Write(append(body, byte('\n'))); err != nil { // Write a \n because some readers split by lines
 			http.Error(rw, "could not write to IPC socket", http.StatusInternalServerError)
 			log.Errorf("could not write to IPC socket: %v", err)
 			return
 		}
+
 		// We can't use ioutil.ReadAll, because the server keeps the
 		// connection open for more requests. Read a single json object.
 		var respBody json.RawMessage
@@ -272,7 +272,7 @@ func (p *Proxy) ProxyIPC(path string) http.HandlerFunc {
 		rw.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 		rw.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
 		rw.Write(respBody)
-		rw.Write([]byte("\n")) // a json object doesn't include a newline
+		rw.Write([]byte("\n"))
 		log.Debugf("response: %s", respBody)
 	})
 }
