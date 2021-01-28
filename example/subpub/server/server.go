@@ -13,9 +13,6 @@ Messages have the following structure:
   "signature": "6e1f5705f41c767d6d3ba516..."
 }
 
-You can test with curl:
-
-curl -s 127.0.0.1:7788/main -X POST -d '{"request":{"method":"hello", "request":"1234"}, "id":"1234"}'
 */
 
 import (
@@ -42,7 +39,7 @@ func main() {
 	// Create the channel for incoming messages and attach to transport
 	listener := make(chan transports.Message)
 
-	// Create HTTPWS endpoint (for HTTP(s) + Websockets(s) handling) using the endpoint interface
+	// Create libp2p subpub handler using the endpoint interface
 	ep := endpoint.SubPubEndpoint{}
 
 	// Configures the endpoint
