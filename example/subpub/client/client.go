@@ -95,7 +95,7 @@ func main() {
 				w.Write([]byte("\n"))
 				return
 			default:
-				if time.Since(st) > time.Duration(time.Second*5) {
+				if time.Since(st) > time.Duration(time.Second*15) {
 					log.Warnf("request timeout")
 					w.Write([]byte("{\"error\": \"timeout\"}"))
 					w.Write([]byte("\n"))
