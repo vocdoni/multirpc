@@ -2,6 +2,7 @@
 package router
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -126,19 +127,22 @@ func (r *Router) getRequest(namespace string, payload []byte, context transports
 
 	if !method.skipSignature {
 		if len(reqOuter.Signature) < 64 {
-			return request, fmt.Errorf("no signature provided")
+			return request, fmt.Errorf("no signature provided or invalid lenght")
 		}
-		if request.SignaturePublicKey, err = ethereum.PubKeyFromSignature(reqOuter.MessageAPI, reqOuter.Signature); err != nil {
+		var sigBytes, pubk []byte
+		if err = reqOuter.Signature.UnmarshalJSON(sigBytes); err != nil {
+			return request, fmt.Errorf("cannot unmarshal signature")
+		}
+
+		if pubk, err = ethereum.PubKeyFromSignature(reqOuter.MessageAPI, sigBytes); err != nil {
 			return request, err
 		}
-		// TBD: remove when everything is compressed only
-		//	if request.SignaturePublicKey, err = ethereum.CompressPubKey(request.SignaturePublicKey); err != nil {
-		//		return request, err
-		//	}
+		request.SignaturePublicKey = hex.EncodeToString(pubk)
+
 		if len(request.SignaturePublicKey) == 0 {
 			return request, fmt.Errorf("could not extract public key from signature")
 		}
-		if request.Address, err = ethereum.AddrFromPublicKey(request.SignaturePublicKey); err != nil {
+		if request.Address, err = ethereum.AddrFromPublicKey(pubk); err != nil {
 			return request, err
 		}
 		log.Debugf("recovered signer address: %s", request.Address.Hex())
