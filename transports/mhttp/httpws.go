@@ -84,3 +84,8 @@ func (h *HttpWsHandler) Address() string {
 func (h *HttpWsHandler) String() string {
 	return h.Proxy.Addr.String()
 }
+func NewHttpWsHandleWithWsReadLimit(readLimit int64) *HttpWsHandler {
+	return &HttpWsHandler{
+		WsReadLimit: readLimit,
+	}
+}
