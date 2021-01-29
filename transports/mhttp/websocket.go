@@ -19,6 +19,7 @@ import (
 type WebsocketHandle struct {
 	Connection *transports.Connection // the ws connection
 	WsProxy    *Proxy                 // proxy where the ws will be associated
+	ReadLimit  int64
 
 	internalReceiver chan transports.Message
 }
@@ -32,7 +33,9 @@ func (c WebsocketContext) ConnectionType() string {
 }
 
 func (c *WebsocketContext) Send(msg transports.Message) error {
-	return c.Conn.Write(context.TODO(), websocket.MessageBinary, msg.Data)
+	tctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	return c.Conn.Write(tctx, websocket.MessageBinary, msg.Data)
 }
 
 // SetProxy sets the proxy for the ws
@@ -40,8 +43,18 @@ func (w *WebsocketHandle) SetProxy(p *Proxy) {
 	w.WsProxy = p
 }
 
+func NewWebSocketHandleWithReadLimit(readLimit int64) *WebsocketHandle {
+	return &WebsocketHandle{
+		ReadLimit: readLimit,
+	}
+}
+
 // Init initializes the websockets handler and the internal channel to communicate with other go-dvote components
 func (w *WebsocketHandle) Init(c *transports.Connection) error {
+	if w.ReadLimit == 0 {
+		w.ReadLimit = 32768 // default by ws client
+	}
+
 	w.internalReceiver = make(chan transports.Message, 1)
 	return nil
 }
@@ -70,7 +83,7 @@ func getWsHandler(path string, receiver chan transports.Message) func(conn *webs
 
 // AddProxyHandler adds the current websocket handler into the Proxy
 func (w *WebsocketHandle) AddProxyHandler(path string) {
-	w.WsProxy.AddWsHandler(path, getWsHandler(path, w.internalReceiver))
+	w.WsProxy.AddWsHandler(path, getWsHandler(path, w.internalReceiver), w.ReadLimit)
 }
 
 // ConnectionType returns a string identifying the transport connection type
@@ -80,10 +93,12 @@ func (w *WebsocketHandle) ConnectionType() string {
 
 // Listen will listen the websockets handler and write the received data into the channel
 func (w *WebsocketHandle) Listen(receiver chan<- transports.Message) {
-	for {
-		msg := <-w.internalReceiver
-		receiver <- msg
-	}
+	go func() {
+		for {
+			msg := <-w.internalReceiver
+			receiver <- msg
+		}
+	}()
 }
 
 // Listen will listen the websockets handler and write the received data into the channel
@@ -123,12 +138,13 @@ func (w *WebsocketHandle) String() string {
 	return w.WsProxy.Addr.String()
 }
 
-func wshandler(w http.ResponseWriter, r *http.Request, ph ProxyWsHandler) {
+func wshandler(w http.ResponseWriter, r *http.Request, ph ProxyWsHandler, readLimit int64) {
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: []string{"*"}})
 	if err != nil {
 		log.Errorf("failed to set websocket upgrade: %s", err)
 		return
 	}
+	conn.SetReadLimit(readLimit)
 	ph(conn)
 }
 
@@ -137,7 +153,7 @@ func somaxconn() int {
 	if err != nil {
 		return syscall.SOMAXCONN
 	}
-	n, err := strconv.Atoi(strings.Trim(fmt.Sprintf("%s", content), "\n"))
+	n, err := strconv.Atoi(strings.Trim(string(content), "\n"))
 	if err != nil {
 		return syscall.SOMAXCONN
 	}

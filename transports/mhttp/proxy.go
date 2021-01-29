@@ -108,10 +108,10 @@ func (p *Proxy) Init() error {
 	if len(p.Conn.TLSdomain) > 0 {
 		log.Infof("fetching letsencrypt TLS certificate for %s", p.Conn.TLSdomain)
 		s, m := p.GenerateSSLCertificate(p.TLSConfig)
-		s.ReadTimeout = 5 * time.Second
-		s.WriteTimeout = 10 * time.Second
+		s.ReadTimeout = 10 * time.Second
+		s.WriteTimeout = 15 * time.Second
 		s.IdleTimeout = 30 * time.Second
-		s.ReadHeaderTimeout = 2 * time.Second
+		s.ReadHeaderTimeout = 3 * time.Second
 		s.Handler = p.Server
 		if err := http2.ConfigureServer(s, nil); err != nil {
 			return err
@@ -132,10 +132,10 @@ func (p *Proxy) Init() error {
 	} else {
 		log.Info("starting go-chi http server")
 		s := &http.Server{
-			ReadTimeout:       5 * time.Second,
-			WriteTimeout:      10 * time.Second,
+			ReadTimeout:       10 * time.Second,
+			WriteTimeout:      20 * time.Second,
 			IdleTimeout:       60 * time.Second,
-			ReadHeaderTimeout: 2 * time.Second,
+			ReadHeaderTimeout: 3 * time.Second,
 			Handler:           p.Server,
 			TLSConfig:         p.TLSConfig,
 		}
@@ -172,10 +172,10 @@ func (p *Proxy) GenerateSSLCertificate(tlsConfig *tls.Config) (*http.Server, *au
 }
 
 // AddWsHandler adds a websocket handler in the proxy
-func (p *Proxy) AddWsHandler(path string, handler ProxyWsHandler) {
+func (p *Proxy) AddWsHandler(path string, handler ProxyWsHandler, readLimit int64) {
 	p.Server.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Upgrade") == "websocket" {
-			wshandler(w, r, handler)
+			wshandler(w, r, handler, readLimit)
 		} else {
 			log.Warn("receied a non upgrade websockets connection to a only WS endpoint")
 		}
@@ -183,10 +183,10 @@ func (p *Proxy) AddWsHandler(path string, handler ProxyWsHandler) {
 }
 
 // AddMixedHandler adds a mixed (websockets and HTTP) handler in the proxy
-func (p *Proxy) AddMixedHandler(path string, HTTPhandler http.HandlerFunc, WShandler ProxyWsHandler) {
+func (p *Proxy) AddMixedHandler(path string, HTTPhandler http.HandlerFunc, WShandler ProxyWsHandler, WSreadLimit int64) {
 	p.Server.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Upgrade") == "websocket" {
-			wshandler(w, r, WShandler)
+			wshandler(w, r, WShandler, WSreadLimit)
 		} else {
 			HTTPhandler(w, r)
 		}
@@ -311,52 +311,44 @@ func (p *Proxy) AddWsHTTPBridge(url string) ProxyWsHandler {
 	}
 }
 
-// AddWsWsBridge adds a WS endpoint to interact with the underlying web3
-func (p *Proxy) AddWsWsBridge(url string) ProxyWsHandler {
-	return func(wslocal *websocket.Conn) {
-		ws := recws.RecConn{
+// AddWsWsBridge adds a WS endpoint to interact with the underlying websocket server
+func (p *Proxy) AddWsWsBridge(url string, readLimit int64) ProxyWsHandler {
+	return func(wsServer *websocket.Conn) {
+		// connection to web3 or vochain
+		wsClient := recws.RecConn{
 			KeepAliveTimeout: 10 * time.Second,
 		}
-		ws.Dial(url, nil)
+		wsClient.Dial(url, nil)
 		attempts := 50
-		for ws.Conn == nil && attempts > 0 {
+		for wsClient.Conn == nil && attempts > 0 {
 			time.Sleep(time.Millisecond * 100)
 			attempts--
 		}
-		if ws.Conn == nil {
+		if wsClient.Conn == nil {
 			log.Errorf("websocket bridge cannot connect with %s", url)
-			wslocal.Close(websocket.StatusAbnormalClosure, "cannot reach destination")
+			wsServer.Close(websocket.StatusAbnormalClosure, "cannot reach destination")
 			return
 		}
-		ws.SetReadLimit(int64(22 * 1024 * 1024)) // tendermint needs up to 20 MB
-		ctx, cancel := context.WithCancel(context.Background())
+		wsClient.SetReadLimit(readLimit)
 		// Read from remote and write to local
 		go func() {
 			for {
-				select {
-				case <-ctx.Done():
-					log.Debugf("websocket connection to %s closed, received context Done", url)
+				// TODO: ReadMessage acepting context
+				t, data, err := wsClient.ReadMessage()
+				if err != nil {
+					log.Debugf("websocket connection to %s closed", url)
 					return
-				default:
-					t, data, err := ws.ReadMessage()
-					if err != nil {
-						log.Debugf("websocket connection to %s closed", url)
-						return
-					}
-					ctx2, cancel := context.WithTimeout(ctx, time.Second*10)
-					if err := wslocal.Write(ctx2, websocket.MessageType(t), data); err != nil {
-						log.Warnf("cannot write message to local websocket: (%s)", err)
-						cancel()
-						return
-					}
-					cancel()
+				}
+				if err := wsServer.Write(context.TODO(), websocket.MessageType(t), data); err != nil {
+					log.Warnf("cannot write message to local websocket: (%s)", err)
+					return
 				}
 			}
 		}()
 
 		// Read local messages and write to remote
 		for {
-			msgType, msg, err := wslocal.Reader(context.TODO())
+			msgType, msg, err := wsServer.Reader(context.TODO())
 			if err != nil {
 				log.Debugf("websocket closed by the client: %s", err)
 				break
@@ -366,12 +358,11 @@ func (p *Proxy) AddWsWsBridge(url string) ProxyWsHandler {
 				log.Warnf("cannot read response: %s", err)
 				continue
 			}
-			if err := ws.WriteMessage(int(msgType), respBody); err != nil {
+			if err := wsClient.WriteMessage(int(msgType), respBody); err != nil {
 				break
 			}
 		}
-		cancel()
-		wslocal.Close(websocket.StatusAbnormalClosure, "ws closed by client")
-		ws.Close()
+		wsServer.Close(websocket.StatusAbnormalClosure, "ws closed by client")
+		wsClient.Close()
 	}
 }

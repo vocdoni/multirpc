@@ -18,6 +18,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/p4u/recws v1.2.2-0.20201005083112-7be7f9397e75
 	github.com/prometheus/client_golang v1.9.0
+	github.com/recws-org/recws v1.2.2
 	go.uber.org/zap v1.16.0
 	go.vocdoni.io/dvote v0.6.1-0.20210125120603-df82783bb500
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
