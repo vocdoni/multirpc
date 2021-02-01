@@ -58,7 +58,7 @@ func (s *SubPubHandle) Listen(reciever chan<- transports.Message) {
 			msg.Data = spmsg.Data
 			msg.TimeStamp = int32(time.Now().Unix())
 			msg.Context = &SubPubContext{PeerID: spmsg.Peer, Sp: s}
-			log.Debugf("received: %s", msg.Data)
+			log.Debugf("received %d bytes from %s", len(msg.Data), spmsg.Peer)
 			reciever <- msg
 		}
 	}()
@@ -85,7 +85,7 @@ func (s *SubPubHandle) ConnectionType() string {
 }
 
 func (s *SubPubHandle) Send(msg transports.Message) error {
-	log.Debugf("sending %s", msg.Data)
+	log.Debugf("sending %d bytes to broadcast channel", len(msg.Data))
 	s.SubPub.BroadcastWriter <- msg.Data
 	return nil
 }
@@ -96,6 +96,7 @@ func (s *SubPubHandle) AddNamespace(namespace string) error {
 }
 
 func (s *SubPubHandle) SendUnicast(address string, msg transports.Message) error {
+	log.Debugf("sending %d bytes to %s", len(msg.Data), address)
 	if err := s.SubPub.PeerStreamWrite(address, msg.Data); err != nil {
 		return fmt.Errorf("cannot send message to %s: (%w)", address, err)
 	}
