@@ -34,6 +34,13 @@ type RequestMessage struct {
 	Signature HexBytes `json:"signature"`
 }
 
+type ResponseMessage struct {
+	MessageAPI json.RawMessage `json:"response"`
+
+	ID        string   `json:"id"`
+	Signature HexBytes `json:"signature"`
+}
+
 type registeredMethod struct {
 	public        bool
 	skipSignature bool
@@ -110,10 +117,6 @@ func (r *Router) getRequest(namespace string, payload []byte, context transports
 		return request, err
 	}
 
-	// Check both Ids are equals (avoid replay attack)
-	if request.Id != request.Message.GetID() {
-		return request, fmt.Errorf("request Id and message Id do not match")
-	}
 	request.Method = request.Message.GetMethod()
 
 	if request.Method == "" {
@@ -186,7 +189,7 @@ func (r *Router) SendError(request RouterRequest, errMsg string) {
 
 	// Add any last fields to the inner response, and marshal it with sorted
 	// fields for signing.
-	response := &RequestMessage{ID: request.Id}
+	response := &ResponseMessage{ID: request.Id}
 	response.ID = request.Id
 
 	message := r.messageType()
@@ -241,7 +244,7 @@ func (r *Router) DelAuthKey(addr common.Address) {
 // BuildReply builds a response message (set ID, Timestamp and Signature)
 func BuildReply(response transports.MessageAPI, request RouterRequest) transports.Message {
 	var err error
-	respRequest := &RequestMessage{ID: request.Id}
+	respRequest := &ResponseMessage{ID: request.Id}
 
 	response.SetID(request.Id)
 	response.SetTimestamp(int32(time.Now().Unix()))
