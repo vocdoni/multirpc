@@ -108,10 +108,10 @@ func (p *Proxy) Init() error {
 	if len(p.Conn.TLSdomain) > 0 {
 		log.Infof("fetching letsencrypt TLS certificate for %s", p.Conn.TLSdomain)
 		s, m := p.GenerateSSLCertificate(p.TLSConfig)
-		s.ReadTimeout = 10 * time.Second
-		s.WriteTimeout = 15 * time.Second
-		s.IdleTimeout = 30 * time.Second
-		s.ReadHeaderTimeout = 3 * time.Second
+		s.ReadTimeout = 60 * time.Second
+		s.WriteTimeout = 60 * time.Second
+		s.IdleTimeout = 60 * time.Second
+		s.ReadHeaderTimeout = 30 * time.Second
 		s.Handler = p.Server
 		if err := http2.ConfigureServer(s, nil); err != nil {
 			return err
@@ -132,10 +132,10 @@ func (p *Proxy) Init() error {
 	} else {
 		log.Info("starting go-chi http server")
 		s := &http.Server{
-			ReadTimeout:       10 * time.Second,
-			WriteTimeout:      20 * time.Second,
+			ReadTimeout:       60 * time.Second,
+			WriteTimeout:      60 * time.Second,
 			IdleTimeout:       60 * time.Second,
-			ReadHeaderTimeout: 3 * time.Second,
+			ReadHeaderTimeout: 20 * time.Second,
 			Handler:           p.Server,
 			TLSConfig:         p.TLSConfig,
 		}
