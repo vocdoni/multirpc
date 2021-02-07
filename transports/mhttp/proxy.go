@@ -94,10 +94,13 @@ func (p *Proxy) Init() error {
 	p.Server.Use(middleware.Throttle(5000))
 	p.Server.Use(middleware.Timeout(30 * time.Second))
 	cors := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type"},
-		MaxAge:         300, // Maximum value not ignored by any of major browsers
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+			return true
+		}, // Kind of equivalent to AllowedOrigin: []string{"*"} but it returns the origin as allowed origin.
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	})
 	p.Server.Use(cors.Handler)
 
