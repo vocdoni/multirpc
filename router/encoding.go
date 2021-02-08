@@ -18,6 +18,9 @@ func (b HexBytes) MarshalJSON() ([]byte, error) {
 }
 
 func (b *HexBytes) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
 	if len(data) < 2 || data[0] != '"' || data[len(data)-1] != '"' {
 		return fmt.Errorf("invalid JSON string: %q", data)
 	}

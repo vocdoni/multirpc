@@ -2,7 +2,6 @@
 package router
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -22,7 +21,7 @@ type RouterRequest struct {
 	Id                 string
 	Authenticated      bool
 	Address            ethcommon.Address
-	SignaturePublicKey string
+	SignaturePublicKey []byte
 	Private            bool
 	Signer             *ethereum.SignKeys
 }
@@ -109,7 +108,6 @@ func (r *Router) getRequest(namespace string, payload []byte, context transports
 	if err := json.Unmarshal(payload, &reqOuter); err != nil {
 		return request, err
 	}
-
 	request.Id = reqOuter.ID
 	request.MessageContext = context
 	request.Message = r.messageType()
@@ -129,23 +127,22 @@ func (r *Router) getRequest(namespace string, payload []byte, context transports
 	}
 
 	if !method.skipSignature {
-		if len(reqOuter.Signature) < 64 {
+		if len(reqOuter.Signature) != ethereum.SignatureLength {
 			return request, fmt.Errorf("no signature provided or invalid lenght")
 		}
-		var sigBytes, pubk []byte
+		var sigBytes []byte
 		if err = reqOuter.Signature.UnmarshalJSON(sigBytes); err != nil {
-			return request, fmt.Errorf("cannot unmarshal signature")
+			return request, fmt.Errorf("cannot unmarshal signature: %w {%s}", err, reqOuter.Signature)
 		}
 
-		if pubk, err = ethereum.PubKeyFromSignature(reqOuter.MessageAPI, sigBytes); err != nil {
+		if request.SignaturePublicKey, err = ethereum.PubKeyFromSignature(reqOuter.MessageAPI, reqOuter.Signature); err != nil {
 			return request, err
 		}
-		request.SignaturePublicKey = hex.EncodeToString(pubk)
 
-		if len(request.SignaturePublicKey) == 0 {
+		if len(request.SignaturePublicKey) != ethereum.PubKeyLengthBytes {
 			return request, fmt.Errorf("could not extract public key from signature")
 		}
-		if request.Address, err = ethereum.AddrFromPublicKey(pubk); err != nil {
+		if request.Address, err = ethereum.AddrFromPublicKey(request.SignaturePublicKey); err != nil {
 			return request, err
 		}
 		log.Debugf("recovered signer address: %s", request.Address.Hex())

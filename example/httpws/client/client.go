@@ -40,7 +40,7 @@ func NewAPIConnection(addr string) *APIConnection {
 }
 
 // Request makes a request to the previously connected endpoint
-func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *router.RequestMessage {
+func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *router.ResponseMessage {
 
 	// Prepare and send request
 	req.Timestamp = (int32(time.Now().Unix()))
@@ -78,7 +78,7 @@ func (r *APIConnection) Request(req *message.MyAPI, signer *ethereum.SignKeys) *
 		log.Fatalf("%s: %v", req.Method, err)
 	}
 
-	var respOuter router.RequestMessage
+	var respOuter router.ResponseMessage
 	if err := json.Unmarshal(message, &respOuter); err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -116,7 +116,9 @@ func main() {
 			panic(err)
 		}
 	} else {
-		signer.Generate()
+		if err := signer.Generate(); err != nil {
+			panic(err)
+		}
 	}
 
 	log.Infof("connecting to %s", *host)

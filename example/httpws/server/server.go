@@ -105,7 +105,7 @@ func addKey(rr router.RouterRequest) {
 		msg.Error = fmt.Sprintf("address %s already authorized", rr.Address.Hex())
 	} else {
 		rr.Signer.AddAuthKey(rr.Address)
-		log.Infof("adding pubKey %s", rr.SignaturePublicKey)
+		log.Infof("adding pubKey %x", rr.SignaturePublicKey)
 		msg.Reply = fmt.Sprintf("added new authorized address %s", rr.Address.Hex())
 	}
 

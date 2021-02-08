@@ -18,7 +18,7 @@ require (
 	github.com/p4u/recws v1.2.2-0.20201005083112-7be7f9397e75
 	github.com/prometheus/client_golang v1.9.0
 	go.uber.org/zap v1.16.0
-	go.vocdoni.io/dvote v0.6.1-0.20210129144810-e6ce68464ed2
+	go.vocdoni.io/dvote v0.6.1-0.20210206210936-a0407e833753
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
 	nhooyr.io/websocket v1.8.6

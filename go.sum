@@ -96,6 +96,7 @@ github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
+github.com/arnaucube/go-blindsecp256k1 v0.0.0-20210203222605-876755a714c3/go.mod h1:10oM1DQMpukFfSzNsjSQG2rE6UjoGsXT4iIxWIiVbu0=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
@@ -250,6 +251,7 @@ github.com/ethereum/go-ethereum v1.8.27/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHa
 github.com/ethereum/go-ethereum v1.9.3/go.mod h1:PwpWDrCLZrV+tfrhqqF6kPknbISMHaJv9Ln3kPCZLwY=
 github.com/ethereum/go-ethereum v1.9.20/go.mod h1:JSSTypSMTkGZtAdAChH2wP5dZEvPGh3nUTuDpH+hNrg=
 github.com/ethereum/go-ethereum v1.9.23/go.mod h1:JIfVb6esrqALTExdz9hRYvrP0xBDf6wCncIu1hNwHpM=
+github.com/ethereum/go-ethereum v1.9.25/go.mod h1:vMkFiYLHI4tgPw4k2j4MHKoovchFE8plZ0M9VMk4/oM=
 github.com/ethereum/go-ethereum v1.9.26-0.20201212163632-00d10e610f9f h1:Pv4HrraSQSSDRxoXiVYbzbaTifwSQj/rNpadvWQxnN0=
 github.com/ethereum/go-ethereum v1.9.26-0.20201212163632-00d10e610f9f/go.mod h1:vMkFiYLHI4tgPw4k2j4MHKoovchFE8plZ0M9VMk4/oM=
 github.com/facebookgo/atomicfile v0.0.0-20151019160806-2de1f203e7d5/go.mod h1:JpoxHjuQauoxiFMl1ie8Xc/7TfLuMZ5eOCONd1sUBHg=
@@ -1543,8 +1545,12 @@ github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtX
 github.com/urfave/cli/v2 v2.0.0/go.mod h1:SE9GqnLQmjVa0iPEY0f1w3ygNIYcIJ0OKPMoW2caLfQ=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
 github.com/viant/toolbox v0.24.0/go.mod h1:OxMCG57V0PXuIP2HNQrtJf2CjqdmbrOx5EkMILuUhzM=
+github.com/vocdoni/blind-ca v0.1.4/go.mod h1:4ouWDqlvXrrNS0Csf3hKA3cuDTmKh6nP7kSXF39nT4s=
 github.com/vocdoni/eth-storage-proof v0.1.4-0.20201128112323-de7513ce5e25/go.mod h1:NLA1A55raZ1VNMmKulPUm+Lu9CVetCDVuDCYk5bSYrE=
 github.com/vocdoni/multirpc v0.1.9/go.mod h1:SETFzlLbdZq2YFGy0udT1u2ouQUU2cIesopAIgyAjOU=
+github.com/vocdoni/multirpc v0.1.12/go.mod h1:OYWh2wBX0rztgatZC7VEcPW0Ew4Hm8f/msRAO24mpk0=
+github.com/vocdoni/storage-proofs-eth-go v0.1.4/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
+github.com/vocdoni/storage-proofs-eth-go v0.1.5/go.mod h1:8XF/0CpAetwlQJRgQgwBFEbfaYcjrU9gWUBR4F2Aqso=
 github.com/wangjia184/sortedset v0.0.0-20160527075905-f5d03557ba30/go.mod h1:YkocrP2K2tcw938x9gCOmT5G5eCD6jsTz0SZuyAqwIE=
 github.com/warpfork/go-wish v0.0.0-20180510122957-5ad1f5abf436/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
 github.com/warpfork/go-wish v0.0.0-20190328234359-8b3e70f8e830/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
@@ -1640,6 +1646,9 @@ go.vocdoni.io/dvote v0.6.1-0.20210125120603-df82783bb500 h1:IKsu5KF9QVU3hPW4oSI0
 go.vocdoni.io/dvote v0.6.1-0.20210125120603-df82783bb500/go.mod h1:Kf3LwprU/2MhEXLmgL34N12mn3TmhJZ0EnPPL7LoNXs=
 go.vocdoni.io/dvote v0.6.1-0.20210129144810-e6ce68464ed2 h1:kwhtCgi0dEGvh5Ny8yDrr4HPvuN01Dqv5TVt1nZudpA=
 go.vocdoni.io/dvote v0.6.1-0.20210129144810-e6ce68464ed2/go.mod h1:7yTzMiJiZY3E9djQAuEsjEuDhflLcVJKqd1chYC1GVI=
+go.vocdoni.io/dvote v0.6.1-0.20210130094936-75dbb92de3f0/go.mod h1:NJyERGs2LmEvlevZUtOl36MI0HlOUh0d2I0vJcYh5RE=
+go.vocdoni.io/dvote v0.6.1-0.20210206210936-a0407e833753 h1:uS4bbp+ckPfRtyY/I+ZU4Hx5c0Cz4cbXx1DsvTrNdYI=
+go.vocdoni.io/dvote v0.6.1-0.20210206210936-a0407e833753/go.mod h1:HhMMtdnkLI3ujk+zcL1frzFg5S7SbvxWtis7RZTq1dA=
 go.vocdoni.io/proto v0.1.7 h1:UL/WaLW0L4KuChwzK4D258LNAlykD9DNgksmOvaNwgs=
 go.vocdoni.io/proto v0.1.7/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
 go.vocdoni.io/proto v0.1.8/go.mod h1:cyITrt7+sHmUJH06WLu69xB7LBY9c9FakFaBOe8gs/M=
