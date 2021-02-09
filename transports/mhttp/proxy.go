@@ -91,7 +91,7 @@ func (p *Proxy) Init() error {
 		NoColor: true,
 	}))
 	p.Server.Use(middleware.Recoverer)
-	p.Server.Use(middleware.Throttle(5000))
+	p.Server.Use(middleware.ThrottleBacklog(5000, 20000, 30*time.Second))
 	p.Server.Use(middleware.Timeout(30 * time.Second))
 	cors := cors.New(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
