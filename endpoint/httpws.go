@@ -107,11 +107,10 @@ func (e *HTTPWSendPoint) Init(listener chan transports.Message) error {
 	log.Infof("creating API service")
 
 	// Create a HTTP Proxy service
-	pxy, err := proxy(e.config.ListenHost, e.config.ListenPort, e.config.TLSdomain, e.config.TLSdirCert)
+	pxy, err := proxy(e.config.ListenHost, e.config.ListenPort, e.config.TLSconfig, e.config.TLSdomain, e.config.TLSdirCert)
 	if err != nil {
 		return err
 	}
-	pxy.TLSConfig = e.config.TLSconfig
 
 	// Create a HTTP+Websocket transport and attach the proxy
 	var ts transports.Transport
@@ -153,12 +152,13 @@ func (e *HTTPWSendPoint) Init(listener chan transports.Message) error {
 
 // proxy creates a new service for routing HTTP connections using go-chi server
 // if tlsDomain is specified, it will use letsencrypt to fetch a valid TLS certificate
-func proxy(host string, port int32, tlsDomain, tlsDir string) (*mhttp.Proxy, error) {
+func proxy(host string, port int32, tlsConfig *tls.Config, tlsDomain, tlsDir string) (*mhttp.Proxy, error) {
 	pxy := mhttp.NewProxy()
 	pxy.Conn.TLSdomain = tlsDomain
 	pxy.Conn.TLScertDir = tlsDir
 	pxy.Conn.Address = host
 	pxy.Conn.Port = port
+	pxy.TLSConfig = tlsConfig
 	log.Infof("creating proxy service, listening on %s:%d", host, port)
 	if pxy.Conn.TLSdomain != "" {
 		log.Infof("configuring proxy with TLS certificate for domain %s", tlsDomain)
