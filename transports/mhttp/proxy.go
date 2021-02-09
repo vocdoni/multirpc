@@ -115,7 +115,6 @@ func (p *Proxy) Init() error {
 		s.WriteTimeout = 15 * time.Second
 		s.IdleTimeout = 30 * time.Second
 		s.ReadHeaderTimeout = 3 * time.Second
-		s.TLSConfig = p.TLSConfig
 		s.Handler = p.Server
 		if err := http2.ConfigureServer(s, nil); err != nil {
 			return err
