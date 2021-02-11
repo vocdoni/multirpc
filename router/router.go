@@ -105,6 +105,9 @@ func (r *Router) getRequest(namespace string, payload []byte, context transports
 	// request, and the signature.
 	log.Debugf("got request: %s", payload)
 	reqOuter := &RequestMessage{}
+	if len(payload) < 22 { // 22 = min num characters json_tags+method+request
+		return request, fmt.Errorf("empty payload")
+	}
 	if err := json.Unmarshal(payload, &reqOuter); err != nil {
 		return request, err
 	}

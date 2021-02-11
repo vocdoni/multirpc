@@ -91,7 +91,7 @@ func (p *Proxy) Init() error {
 		NoColor: true,
 	}))
 	p.Server.Use(middleware.Recoverer)
-	p.Server.Use(middleware.ThrottleBacklog(5000, 20000, 30*time.Second))
+	p.Server.Use(middleware.ThrottleBacklog(5000, 40000, 30*time.Second))
 	p.Server.Use(middleware.Timeout(30 * time.Second))
 	cors := cors.New(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
@@ -112,8 +112,8 @@ func (p *Proxy) Init() error {
 		log.Infof("fetching letsencrypt TLS certificate for %s", p.Conn.TLSdomain)
 		s, m := p.GenerateSSLCertificate(p.TLSConfig)
 		s.ReadTimeout = 10 * time.Second
-		s.WriteTimeout = 15 * time.Second
-		s.IdleTimeout = 30 * time.Second
+		s.WriteTimeout = 10 * time.Second
+		s.IdleTimeout = 10 * time.Second
 		s.ReadHeaderTimeout = 3 * time.Second
 		s.Handler = p.Server
 		if err := http2.ConfigureServer(s, nil); err != nil {
@@ -136,8 +136,8 @@ func (p *Proxy) Init() error {
 		log.Info("starting go-chi http server")
 		s := &http.Server{
 			ReadTimeout:       10 * time.Second,
-			WriteTimeout:      20 * time.Second,
-			IdleTimeout:       60 * time.Second,
+			WriteTimeout:      10 * time.Second,
+			IdleTimeout:       10 * time.Second,
 			ReadHeaderTimeout: 3 * time.Second,
 			Handler:           p.Server,
 		}

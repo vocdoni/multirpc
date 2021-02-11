@@ -70,6 +70,8 @@ func (h *HttpContext) Send(msg transports.Message) error {
 		}
 	}()
 	defer close(h.sent)
+	defer h.Request.Body.Close()
+
 	if h.Request.Context().Err() != nil {
 		// The connection was closed, so don't try to write to it.
 		return fmt.Errorf("connection is closed")
