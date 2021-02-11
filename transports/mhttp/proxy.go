@@ -91,6 +91,7 @@ func (p *Proxy) Init() error {
 		NoColor: true,
 	}))
 	p.Server.Use(middleware.Recoverer)
+	p.Server.Use(middleware.Heartbeat("/ping"))
 	p.Server.Use(middleware.ThrottleBacklog(5000, 40000, 30*time.Second))
 	p.Server.Use(middleware.Timeout(30 * time.Second))
 	cors := cors.New(cors.Options{
@@ -104,17 +105,13 @@ func (p *Proxy) Init() error {
 	})
 	p.Server.Use(cors.Handler)
 
-	p.Server.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pong"))
-	})
-
 	if len(p.Conn.TLSdomain) > 0 {
 		log.Infof("fetching letsencrypt TLS certificate for %s", p.Conn.TLSdomain)
 		s, m := p.GenerateSSLCertificate(p.TLSConfig)
-		s.ReadTimeout = 10 * time.Second
-		s.WriteTimeout = 10 * time.Second
+		s.ReadTimeout = 20 * time.Second
+		s.WriteTimeout = 15 * time.Second
 		s.IdleTimeout = 10 * time.Second
-		s.ReadHeaderTimeout = 3 * time.Second
+		s.ReadHeaderTimeout = 5 * time.Second
 		s.Handler = p.Server
 		if err := http2.ConfigureServer(s, nil); err != nil {
 			return err
