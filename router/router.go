@@ -195,30 +195,34 @@ func (r *Router) SendError(request RouterRequest, errMsg string) {
 
 	// Add any last fields to the inner response, and marshal it with sorted
 	// fields for signing.
-	response := &ResponseMessage{ID: request.Id}
-	response.ID = request.Id
-
+	response := &ResponseMessage{}
 	message := r.messageType()
-	message.SetID(request.Id)
-	message.SetTimestamp(int32(time.Now().Unix()))
 	message.SetError(errMsg)
 
-	response.MessageAPI, err = crypto.SortedMarshalJSON(message)
-	if err != nil {
-		log.Error(err)
-		return
-	}
+	// Only sign and add basic information if the request ID sent by the client
+	// is valid.
+	if len(request.Id) > 0 {
+		response.ID = request.Id
+		message.SetID(request.Id)
+		message.SetTimestamp(int32(time.Now().Unix()))
 
-	// Sign the marshaled inner response.
-	messagePayload, err := response.MessageAPI.MarshalJSON()
-	if err != nil {
-		log.Error(err)
-		return
-	}
-	response.Signature, err = r.signer.Sign(messagePayload)
-	if err != nil {
-		log.Warnf("could not sign error message: %v", err)
-		// continue without the signature
+		response.MessageAPI, err = crypto.SortedMarshalJSON(message)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		// Sign the marshaled inner response.
+		messagePayload, err := response.MessageAPI.MarshalJSON()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		response.Signature, err = r.signer.Sign(messagePayload)
+		if err != nil {
+			log.Warnf("could not sign error message: %v", err)
+			// continue without the signature
+		}
 	}
 
 	data, err := json.Marshal(response)
