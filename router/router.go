@@ -101,6 +101,9 @@ func (r *Router) Route() {
 }
 
 func (r *Router) getRequest(namespace string, payload []byte, context transports.MessageContext) (request RouterRequest, err error) {
+	// In the case of errors, we need the context to reply too.
+	request.MessageContext = context
+
 	// First unmarshal the outer layer, to obtain the request ID, the signed
 	// request, and the signature.
 	log.Debugf("got request: %s", payload)
@@ -112,7 +115,6 @@ func (r *Router) getRequest(namespace string, payload []byte, context transports
 		return request, err
 	}
 	request.Id = reqOuter.ID
-	request.MessageContext = context
 	request.Message = r.messageType()
 	if err := json.Unmarshal(reqOuter.MessageAPI, request.Message); err != nil {
 		return request, err
@@ -184,6 +186,10 @@ func (r *Router) registerPublic(namespace, method string, handler func(RouterReq
 
 // SendError formats and sends an error message
 func (r *Router) SendError(request RouterRequest, errMsg string) {
+	if request.MessageContext == nil {
+		log.Errorf("cannot reply with error as MessageContext==nil: %s", errMsg)
+		return
+	}
 	var err error
 	log.Warn(errMsg)
 
@@ -211,23 +217,21 @@ func (r *Router) SendError(request RouterRequest, errMsg string) {
 	}
 	response.Signature, err = r.signer.Sign(messagePayload)
 	if err != nil {
-		log.Error(err)
+		log.Warnf("could not sign error message: %v", err)
 		// continue without the signature
 	}
 
-	if request.MessageContext != nil {
-		data, err := json.Marshal(response)
-		if err != nil {
-			log.Warnf("error marshaling response body: %s", err)
-		}
-		msg := transports.Message{
-			TimeStamp: int32(time.Now().Unix()),
-			Context:   request.MessageContext,
-			Data:      data,
-		}
-		if err := request.Send(msg); err != nil {
-			log.Warn(err)
-		}
+	data, err := json.Marshal(response)
+	if err != nil {
+		log.Warnf("error marshaling response body: %s", err)
+	}
+	msg := transports.Message{
+		TimeStamp: int32(time.Now().Unix()),
+		Context:   request.MessageContext,
+		Data:      data,
+	}
+	if err := request.Send(msg); err != nil {
+		log.Warn(err)
 	}
 }
 
