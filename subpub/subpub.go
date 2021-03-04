@@ -26,6 +26,13 @@ import (
 	"go.vocdoni.io/dvote/util"
 )
 
+// We use go-bare for export/import the trie. In order to support
+// big census (up to 8 Million entries) we need to increase the maximums.
+
+const bareMaxArrayLength uint64 = 1024 * 1014 // 1 Million
+
+const bareMaxUnmarshalBytes uint64 = 1024 * 1024 * 10 // 200 MiB
+
 // SubPub is a simplified PubSub protocol using libp2p
 type SubPub struct {
 	Key             ecdsa.PrivateKey

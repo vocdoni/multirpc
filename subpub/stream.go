@@ -63,6 +63,8 @@ func (ps *SubPub) readHandler(stream network.Stream) {
 			// continues below
 		}
 		message := new(Message)
+		bare.MaxArrayLength(bareMaxArrayLength)
+		bare.MaxUnmarshalBytes(bareMaxUnmarshalBytes)
 		if err := bare.UnmarshalReader(io.Reader(r), message); err != nil {
 			log.Debugf("error reading stream buffer %s: %v", stream.Conn().RemotePeer().Pretty(), err)
 			stream.Close()
