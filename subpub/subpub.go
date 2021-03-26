@@ -29,9 +29,9 @@ import (
 // We use go-bare for export/import the trie. In order to support
 // big census (up to 8 Million entries) we need to increase the maximums.
 
-const bareMaxArrayLength uint64 = 1024 * 1014 * 1024 // 1 Million
+const bareMaxArrayLength uint64 = 1024 * 1014 * 8 // 8 Million entires
 
-const bareMaxUnmarshalBytes uint64 = 1024 * 1024 * 200 // 200 MiB
+const bareMaxUnmarshalBytes uint64 = bareMaxArrayLength * 32 // Assuming 32 bytes per entry
 
 // SubPub is a simplified PubSub protocol using libp2p
 type SubPub struct {
