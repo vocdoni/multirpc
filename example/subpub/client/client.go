@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vocdoni/multirpc/crypto"
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"github.com/vocdoni/multirpc/example/subpub/message"
 	"github.com/vocdoni/multirpc/router"
 	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/transports/mhttp"
 	"github.com/vocdoni/multirpc/transports/subpubtransport"
-	"go.vocdoni.io/dvote/crypto"
-	"go.vocdoni.io/dvote/crypto/ethereum"
 
 	"go.vocdoni.io/dvote/log"
 )

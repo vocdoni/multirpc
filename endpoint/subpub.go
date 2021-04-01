@@ -3,9 +3,9 @@ package endpoint
 import (
 	"fmt"
 
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"github.com/vocdoni/multirpc/transports"
 	"github.com/vocdoni/multirpc/transports/subpubtransport"
-	"go.vocdoni.io/dvote/crypto/ethereum"
 )
 
 const (

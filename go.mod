@@ -7,6 +7,8 @@ require (
 	github.com/ethereum/go-ethereum v1.9.26-0.20201212163632-00d10e610f9f
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/cors v1.1.1
+	github.com/iden3/go-iden3-core v0.0.8-0.20200325104031-1ed04a261b78
+	github.com/iden3/go-iden3-crypto v0.0.4
 	github.com/ipfs/go-log v1.0.4
 	github.com/libp2p/go-libp2p v0.13.0
 	github.com/libp2p/go-libp2p-connmgr v0.2.4

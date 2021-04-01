@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"github.com/vocdoni/multirpc/subpub"
 	"github.com/vocdoni/multirpc/transports"
-	"go.vocdoni.io/dvote/crypto/ethereum"
 	"go.vocdoni.io/dvote/log"
 )
 

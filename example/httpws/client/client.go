@@ -14,10 +14,10 @@ import (
 
 	"nhooyr.io/websocket"
 
+	"github.com/vocdoni/multirpc/crypto"
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"github.com/vocdoni/multirpc/example/httpws/message"
 	"github.com/vocdoni/multirpc/router"
-	"go.vocdoni.io/dvote/crypto"
-	"go.vocdoni.io/dvote/crypto/ethereum"
 
 	"go.vocdoni.io/dvote/log"
 )

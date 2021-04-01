@@ -21,7 +21,7 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	dhtopts "github.com/libp2p/go-libp2p-kad-dht/opts"
 	multiaddr "github.com/multiformats/go-multiaddr"
-	"go.vocdoni.io/dvote/crypto/ethereum"
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"go.vocdoni.io/dvote/log"
 	"go.vocdoni.io/dvote/util"
 )

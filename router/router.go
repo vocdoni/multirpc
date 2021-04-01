@@ -8,9 +8,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/vocdoni/multirpc/crypto"
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"github.com/vocdoni/multirpc/transports"
-	"go.vocdoni.io/dvote/crypto"
-	"go.vocdoni.io/dvote/crypto/ethereum"
 	"go.vocdoni.io/dvote/log"
 )
 

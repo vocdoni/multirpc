@@ -23,7 +23,7 @@ import (
 	"github.com/vocdoni/multirpc/router"
 	"github.com/vocdoni/multirpc/transports"
 
-	"go.vocdoni.io/dvote/crypto/ethereum"
+	"github.com/vocdoni/multirpc/crypto/ethereum"
 	"go.vocdoni.io/dvote/log"
 )
 
