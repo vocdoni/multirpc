@@ -65,7 +65,7 @@ type stdLogger struct {
 	log *zap.SugaredLogger
 }
 
-func (l stdLogger) Print(v ...interface{}) { l.log.Info(v...) }
+func (l stdLogger) Print(v ...interface{}) { l.log.Debug(v...) }
 
 // Init checks if SSL is activated or not and runs a http server consequently
 //
