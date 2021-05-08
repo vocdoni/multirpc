@@ -238,7 +238,7 @@ func (ps *SubPub) String() string {
 
 func (ps *SubPub) printStats() {
 	for {
-		time.Sleep(40 * time.Second)
+		time.Sleep(120 * time.Second)
 		log.Infof("[subPub info] %s", ps)
 	}
 }
